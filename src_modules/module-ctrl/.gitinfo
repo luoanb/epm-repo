@@ -1,4 +1,4 @@
 {
-  remote: "xxx";
-  modulePath: "./";
+  "remote": "xxx",
+  "modulePath": "./"
 }

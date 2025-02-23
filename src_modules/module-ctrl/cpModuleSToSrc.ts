@@ -1,13 +1,16 @@
 import { readdir, stat, readFile } from "fs/promises"
-import fs from "fs"
+import fs, { statSync } from "fs"
 import path from "path"
 import cpy from "cpy"
 
-export const cpModuleSToSrc = async (projectPath: string) => {
-  const files = await readdir(path.join(projectPath, 'node_modules'))
+export const cpModulesToSrc = async (projectPath: string) => {
+  const sourcePath = path.join(projectPath, 'node_modules')
+  const files = await readdir(sourcePath)
   const cpExecs = files.map(async (p) => {
-    if (await isSrcModule(p)) {
-      return await cpy(p, path.join(projectPath, getLastFolderName(p)))
+    const packPath = path.join(sourcePath, p)
+    if (await isSrcModule(packPath)) {
+      const targetPath = path.join(projectPath, "src_modules", getLastFolderName(packPath))
+      return await cpy(`${packPath}/**`, targetPath)
     } else {
       return Promise.resolve()
     }
@@ -21,6 +24,7 @@ const isNodeModule = async (filePath: string) => {
 
 export const isSrcModule = async (filePath: string) => {
   const isNM = await isNodeModule(filePath)
+  return isNM
   if (!isNM) {
     return false
   }
@@ -57,6 +61,10 @@ export const readPackageInfo = async (projectPath: string) => {
 }
 
 function getLastFolderName(filePath: string): string {
-  const dirname = path.dirname(filePath);
-  return path.basename(dirname);
+  const sta = statSync(filePath);
+  if (sta.isDirectory()) {
+    return path.basename(filePath);
+  } else {
+    return path.basename(path.dirname(filePath));
+  }
 }

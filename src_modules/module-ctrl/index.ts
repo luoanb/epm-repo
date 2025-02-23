@@ -1,2 +1,2 @@
-export * from "./cpModuleSToSrc"
+export * from "./cpModulesToSrc"
 export * from "./updatePackageInfoForSrcModule"

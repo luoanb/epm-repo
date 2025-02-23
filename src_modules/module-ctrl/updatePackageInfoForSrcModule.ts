@@ -1,7 +1,7 @@
 import { readdir, readFile, writeFile } from "fs/promises"
 import path from "path"
-import { Exception } from "./Exception"
-import { readPackageInfo } from "./cpModuleSToSrc"
+import { Exception } from "exception"
+import { readPackageInfo } from "./cpModulesToSrc"
 
 const deps = ["devDependencies", "dependencies", "peerDependencies"]
 // const defaultDependencies = "dependencies"
@@ -67,7 +67,7 @@ export const updatePackageInfoForSrcModule = async (projectPath: string) => {
 
 
   } catch (error) {
-    throw Exception.throw("1000", { contentMsg: projectPath, error })
+    Exception.throw("1000", { contentMsg: projectPath, error })
   }
 }
 

@@ -5,6 +5,7 @@
   "main": "index.ts",
   "isSrcModule": true,
   "dependencies": {
-    "cpy": "^11.1.0"
+    "cpy": "^11.1.0",
+    "exception": "../exception"
   }
 }
