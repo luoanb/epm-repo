@@ -60,7 +60,7 @@ export const updatePackageInfoForSrcModule = async (projectPath: string) => {
       }
       let newP = pInfo.data
       for (const sm of srcModules) {
-        newP = updateDependenciesInPackageData(pInfo.data, sm.name, windowsPathToLinuxPath(path.relative(pInfo.url, sm.url)))
+        newP = updateDependenciesInPackageData(pInfo.data, sm.name, windowsPathToLinuxPath(path.relative(pInfo.url, sm.url), true))
       }
       await writeFile(path.join(pInfo.url, "package.json"), JSON.stringify(newP, null, 2))
     }
@@ -96,7 +96,14 @@ const updateDependenciesInPackageData = (packageData: Record<string, any>, depNa
   return packageData
 }
 
-function windowsPathToLinuxPath(windowsPath: string) {
+/**
+ * 把windows path 转为linux path
+ * @param windowsPath 
+ * @param strongRelative 强制附加 "./"|"../"
+ * @returns 
+ */
+function windowsPathToLinuxPath(windowsPath: string, strongRelative = false) {
+  const isAbsolute = path.isAbsolute(windowsPath)
   // 检查是否是绝对路径（以驱动器字母开头）
   const driveLetterPattern = /^[a-zA-Z]:/;
   if (driveLetterPattern.test(windowsPath)) {
@@ -106,5 +113,12 @@ function windowsPathToLinuxPath(windowsPath: string) {
 
   // 替换所有反斜杠为正斜杠
   const linuxPath = windowsPath.replace(/\\/g, '/');
-  return linuxPath;
+
+  if (isAbsolute || !strongRelative) {
+    return linuxPath
+  }
+  if (linuxPath.startsWith("./") || linuxPath.startsWith("../")) {
+    return linuxPath
+  }
+  return `./${linuxPath}`
 }

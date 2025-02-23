@@ -25,7 +25,7 @@ export class Exception extends Error {
     if (error?.errorCode && throwOnce) {
       throw error
     }
-    const msg = contentMsg ? `${EXECPTIONS[exceptionKey].msg}:${contentMsg}` : EXECPTIONS[exceptionKey].msg
+    const msg = contentMsg ? `${EXECPTIONS[exceptionKey].msg}: ${contentMsg}` : EXECPTIONS[exceptionKey].msg
     throw new Exception(EXECPTIONS[exceptionKey].code, msg)
   }
 }

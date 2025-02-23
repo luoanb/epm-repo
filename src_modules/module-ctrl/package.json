@@ -5,7 +5,10 @@
   "main": "index.ts",
   "isSrcModule": true,
   "dependencies": {
-    "cpy": "^11.1.0",
-    "exception": "../exception"
+    "exception": "../exception",
+    "fs-extra": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4"
   }
 }

@@ -1,11 +1,18 @@
 import { readdir, stat, readFile } from "fs/promises"
 import fs, { statSync } from "fs"
 import path from "path"
-import cpy from "cpy"
+import fse from "fs-extra/esm"
+import { Exception } from "exception"
 
+/**
+ * 将项目内的所有src_module从node_modules复制到src_modules
+ * @param projectPath 
+ * @returns 
+ */
 export const cpModulesToSrc = async (projectPath: string) => {
   const sourcePath = path.join(projectPath, 'node_modules')
   const files = await readdir(sourcePath)
+  // todo 还有@rsbuild/code 类似的包无法被正常识别复制
   const cpExecs = files.map(async (p) => {
     const packPath = path.join(sourcePath, p)
     if (await isSrcModule(packPath)) {
@@ -14,7 +21,8 @@ export const cpModulesToSrc = async (projectPath: string) => {
       if (fs.existsSync(targetPath)) {
         return Promise.resolve()
       }
-      return await cpy(`${packPath}/**`, targetPath)
+      return await cpModule(sourcePath, targetPath)
+      // return await cpy(`${packPath}/**`, targetPath)
     } else {
       return Promise.resolve()
     }
@@ -70,4 +78,38 @@ function getLastFolderName(filePath: string): string {
   } else {
     return path.basename(path.dirname(filePath));
   }
+}
+
+/**
+ * 将项目的指定模块复制到src_modules
+ * @param projectPath 项目地址 
+ * @param moduleName 模块名称
+ */
+export const cpSpecificSrcmodule = async (projectPath: string, moduleName: string) => {
+  const sourcePath = path.join(projectPath, 'node_modules', moduleName)
+  try {
+    if (await isSrcModule(sourcePath)) {
+      const targetPath = path.join(projectPath, "src_modules", getLastFolderName(sourcePath))
+      // 已存在的跳过
+      if (fs.existsSync(sourcePath)) {
+        // return Promise.resolve()
+        Exception.throw("1002", { contentMsg: moduleName })
+      }
+      return await cpModule(sourcePath, targetPath)
+    }
+  } catch (error) {
+    console.log("error", error);
+
+    Exception.throw("1001", { contentMsg: moduleName, error })
+  }
+}
+
+export const cpModule = async (sourcePath: string, targetPath: string) => {
+  await fse.copy(sourcePath, targetPath, {
+    filter: (src) => {
+      const rsrc = path.relative(sourcePath, src)
+      return !(rsrc.startsWith("node_modules\\") || rsrc.startsWith("node_modules/"))
+    },
+    dereference: true
+  })
 }
