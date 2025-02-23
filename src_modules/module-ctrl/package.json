@@ -1,0 +1,10 @@
+{
+  "name": "module-ctrl",
+  "version": "1.0.1",
+  "platform": "node",
+  "main": "index.ts",
+  "isSrcModule": true,
+  "dependencies": {
+    "cpy": "^11.1.0"
+  }
+}
