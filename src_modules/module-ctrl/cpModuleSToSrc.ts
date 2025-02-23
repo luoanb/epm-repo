@@ -10,6 +10,10 @@ export const cpModulesToSrc = async (projectPath: string) => {
     const packPath = path.join(sourcePath, p)
     if (await isSrcModule(packPath)) {
       const targetPath = path.join(projectPath, "src_modules", getLastFolderName(packPath))
+      // 已存在的跳过
+      if (fs.existsSync(targetPath)) {
+        return Promise.resolve()
+      }
       return await cpy(`${packPath}/**`, targetPath)
     } else {
       return Promise.resolve()
@@ -24,7 +28,6 @@ const isNodeModule = async (filePath: string) => {
 
 export const isSrcModule = async (filePath: string) => {
   const isNM = await isNodeModule(filePath)
-  return isNM
   if (!isNM) {
     return false
   }
