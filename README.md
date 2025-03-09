@@ -1,29 +1,11 @@
-# Rsbuild project
+# Epm Repo
 
-## Setup
+Es Module Publish Cli
 
-Install the dependencies:
+提供一个新的资源分发思路：我们不再对打包的制品进行分发，而是直接分发源码。仅在最后制成具体 App 时才进行最后的打包。
 
-```bash
-pnpm install
-```
+## 新特性
 
-## Get started
-
-Start the dev server:
-
-```bash
-pnpm dev
-```
-
-Build the app for production:
-
-```bash
-pnpm build
-```
-
-Preview the production build locally:
-
-```bash
-pnpm preview
-```
+1. 库的使用者可以方便的对源码进行定制，对开源更友好。
+2. 应用级别开发者不再因为要集成各种不同的分发制品而烦恼。
+3. 库开发者也不需要考虑考虑制品问题，库的分发是唯一的，即 ES 模块，附加当代 build 工具所支持的其他各种资源，但是会统一。

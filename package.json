@@ -1,7 +1,6 @@
 {
   "name": "epm-repo",
-  "private": true,
-  "version": "1.0.0",
+  "version": "0.0.1",
   "scripts": {
     "dev": "rsbuild dev --open",
     "build": "rsbuild build",
