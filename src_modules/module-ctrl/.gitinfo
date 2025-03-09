@@ -1,4 +1,16 @@
 {
-  "remote": "xxx",
-  "modulePath": "./"
+  "repo": {
+    "origin": {
+      "remote": "xxx",
+      "modulePath": "./",
+      "vcs": "git",
+      "versions": {
+        "1.0.0": "67f66bc7069d7"
+      }
+    }
+  },
+  "curentRepo": "origin",
+  "versions": [
+    "1.0.0"
+  ]
 }

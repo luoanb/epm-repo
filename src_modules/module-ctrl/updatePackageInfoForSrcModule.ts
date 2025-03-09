@@ -1,54 +1,56 @@
-import { readdir, readFile, writeFile } from "fs/promises"
-import path from "path"
-import { Exception } from "exception"
-import { readPackageInfo } from "./cpModulesToSrc"
+import { readdir, readFile, writeFile } from "fs/promises";
+import path from "path";
+import { Exception } from "exception";
+import { SrcModuleInfo } from "./SrcModuleInfo";
 
-const deps = ["devDependencies", "dependencies", "peerDependencies"]
+export const depKeys = ["devDependencies", "dependencies", "peerDependencies"];
 // const defaultDependencies = "dependencies"
-
 
 interface PackageDatasItem {
   /** 项目路径 */
-  url: string,
+  url: string;
   /** package.json Data */
-  data: Record<string, any>,
+  data: Record<string, any>;
 }
 
 interface SrcModuleItem {
   /** 项目路径 */
-  url: string,
+  url: string;
   /** 项目名称 */
-  name: string
+  name: string;
 }
 
 /**
  * 为SrcModule更新package.json信息
  */
 export const updatePackageInfoForSrcModule = async (projectPath: string) => {
-  const srcModulesDir = "src_modules"
+  const srcModulesDir = "src_modules";
   try {
-    const packageStr = await readFile(path.join(projectPath, "package.json"), "utf-8")
-    let packageData = JSON.parse(packageStr)
-    const srcPath = path.join(projectPath, srcModulesDir)
-    const files = await readdir(srcPath)
+    const packageStr = await readFile(
+      path.join(projectPath, "package.json"),
+      "utf-8"
+    );
+    let packageData = JSON.parse(packageStr);
+    const srcPath = path.join(projectPath, srcModulesDir);
+    const files = await readdir(srcPath);
 
-    const packageDatas: PackageDatasItem[] = []
-    const srcModules: SrcModuleItem[] = []
-    packageDatas.push({ url: projectPath, data: packageData })
+    const packageDatas: PackageDatasItem[] = [];
+    const srcModules: SrcModuleItem[] = [];
+    packageDatas.push({ url: projectPath, data: packageData });
 
     for (const f of files) {
-      const mf = path.join(srcPath, f)
-      const info = await readPackageInfo(mf)
+      const mf = path.join(srcPath, f);
+      const info = await SrcModuleInfo.readPackageInfo(mf);
       if (info) {
         packageDatas.push({
           url: mf,
-          data: info
-        })
+          data: info,
+        });
         if (info.isSrcModule) {
           srcModules.push({
             url: mf, // 绝对路径
-            name: info.name
-          })
+            name: info.name,
+          });
         }
       }
     }
@@ -56,35 +58,44 @@ export const updatePackageInfoForSrcModule = async (projectPath: string) => {
     for (const pInfo of packageDatas) {
       // 没有src_modules不用更新
       if (!srcModules.length) {
-        return
+        return;
       }
-      let newP = pInfo.data
+      let newP = pInfo.data;
       for (const sm of srcModules) {
-        newP = updateDependenciesInPackageData(pInfo.data, sm.name, windowsPathToLinuxPath(path.relative(pInfo.url, sm.url), true))
+        newP = updateDependenciesInPackageData(
+          pInfo.data,
+          sm.name,
+          windowsPathToLinuxPath(path.relative(pInfo.url, sm.url), true)
+        );
       }
-      await writeFile(path.join(pInfo.url, "package.json"), JSON.stringify(newP, null, 2))
+      await writeFile(
+        path.join(pInfo.url, "package.json"),
+        JSON.stringify(newP, null, 2),
+        "utf-8"
+      );
     }
-
-
   } catch (error) {
-    Exception.throw("1000", { contentMsg: projectPath, error })
+    Exception.throw("1000", { contentMsg: projectPath, error });
   }
-}
-
+};
 
 /**
  * 更新指定package.json data 的依赖
- * @param packageData 
- * @param depName 
- * @param depPath 
- * @returns 
+ * @param packageData
+ * @param depName
+ * @param depPath
+ * @returns
  */
-const updateDependenciesInPackageData = (packageData: Record<string, any>, depName: string, depPath: string) => {
-  let isExistInPackage = 0
-  for (const dep of deps) {
+const updateDependenciesInPackageData = (
+  packageData: Record<string, any>,
+  depName: string,
+  depPath: string
+) => {
+  let isExistInPackage = 0;
+  for (const dep of depKeys) {
     if (packageData[dep]?.[depName]) {
-      packageData[dep][depName] = depPath
-      isExistInPackage++
+      packageData[dep][depName] = depPath;
+      isExistInPackage++;
     }
   }
   // if (!isExistInPackage) {
@@ -93,32 +104,38 @@ const updateDependenciesInPackageData = (packageData: Record<string, any>, depNa
   //   }
   //   packageData[defaultDependencies][depName] = depPath
   // }
-  return packageData
-}
+  return packageData;
+};
 
 /**
  * 把windows path 转为linux path
- * @param windowsPath 
+ * @param windowsPath
  * @param strongRelative 强制附加 "./"|"../"
- * @returns 
+ * @returns
  */
-function windowsPathToLinuxPath(windowsPath: string, strongRelative = false) {
-  const isAbsolute = path.isAbsolute(windowsPath)
+export function windowsPathToLinuxPath(
+  windowsPath: string,
+  strongRelative = false
+) {
+  const isAbsolute = path.isAbsolute(windowsPath);
   // 检查是否是绝对路径（以驱动器字母开头）
   const driveLetterPattern = /^[a-zA-Z]:/;
   if (driveLetterPattern.test(windowsPath)) {
     // 替换驱动器字母为挂载点路径（假设挂载点为 /mnt）
-    windowsPath = windowsPath.replace(driveLetterPattern, (match) => `${match[0]}`);
+    windowsPath = windowsPath.replace(
+      driveLetterPattern,
+      (match) => `${match[0]}`
+    );
   }
 
   // 替换所有反斜杠为正斜杠
-  const linuxPath = windowsPath.replace(/\\/g, '/');
+  const linuxPath = windowsPath.replace(/\\/g, "/");
 
   if (isAbsolute || !strongRelative) {
-    return linuxPath
+    return linuxPath;
   }
   if (linuxPath.startsWith("./") || linuxPath.startsWith("../")) {
-    return linuxPath
+    return linuxPath;
   }
-  return `./${linuxPath}`
+  return `./${linuxPath}`;
 }

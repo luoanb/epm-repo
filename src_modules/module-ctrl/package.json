@@ -3,7 +3,18 @@
   "version": "1.0.1",
   "platform": "node",
   "main": "index.ts",
-  "isSrcModule": true,
+  "srcModule": {
+    "curentRepo": "origin",
+    "repo": {
+      "origin": {
+        "remote": "xxx",
+        "modulePath": "./",
+        "vcs": "git",
+        "versions": {}
+      }
+    },
+    "versions": []
+  },
   "dependencies": {
     "exception": "../exception",
     "fs-extra": "^11.3.0"

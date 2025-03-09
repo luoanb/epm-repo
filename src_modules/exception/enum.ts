@@ -11,6 +11,10 @@ export const EXECPTIONS = {
     "code": "1002",
     "msg": "模块已在src_modules"
   },
+  "1003": {
+    "code": "1003",
+    "msg": "请先调用init初始化更新数据函数"
+  },
 }
 
 export type EXCEPTION_ENUM = keyof typeof EXECPTIONS
