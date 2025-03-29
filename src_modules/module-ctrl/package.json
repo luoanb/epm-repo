@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "platform": "node",
   "main": "index.ts",
+  "module": "index.ts",
   "srcModule": {
     "curentRepo": "origin",
     "repo": {

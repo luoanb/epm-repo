@@ -4,14 +4,18 @@
   "scripts": {
     "dev": "rsbuild dev --open",
     "build": "rsbuild build",
-    "preview": "rsbuild preview"
+    "preview": "rsbuild preview",
+    "build:lib": "rslib build",
+    "dev:lib": "rslib build --watch"
   },
   "bin": {
     "epm": "./dist/index.js"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.52.2",
     "@rsbuild/core": "^1.2.3",
     "@rsbuild/plugin-node-polyfill": "^1.3.0",
+    "@rslib/core": "^0.5.5",
     "@types/node": "^22.13.4",
     "@types/yargs": "^17.0.33",
     "exception": "./src_modules/exception",

@@ -2,7 +2,21 @@
   "name": "publish",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    "./test": {
+      "import": "./test.ejs",
+      "types": "./test.d.ts",
+      "require": "./test.cjs"
+    }
+  },
+  "srcModule": {
+    "dist": {
+      ".": "./index.ts",
+      "./test": "./test.ts"
+    }
+  },
   "keywords": [],
   "author": "",
   "license": "ISC"

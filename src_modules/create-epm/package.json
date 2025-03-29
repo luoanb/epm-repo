@@ -1,0 +1,29 @@
+{
+  "name": "create-epm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "srcModule": {
+    "repo": {
+      "origin": {
+        "remote": "xxx",
+        "modulePath": "./",
+        "vcs": "git",
+        "versions": {
+          "1.0.0": "67f66bc7069d7"
+        }
+      }
+    },
+    "build": "./index.ts",
+    "curentRepo": "origin",
+    "versions": [
+      "1.0.0"
+    ]
+  },
+  "license": "ISC"
+}

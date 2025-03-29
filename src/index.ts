@@ -5,15 +5,23 @@ import {
 } from "module-ctrl";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-// const main = () => {
-//   // cpModulesToSrc("E:\\workspace\\epm-repo")
-//   // cpSpecificSrcmodule("E:\\workspace\\epm-repo", "typescript")
-//   updatePackageInfoForSrcModule("E:\\workspace\\epm-repo")
-// }
-
-// main()
 
 yargs(hideBin(process.argv))
+  .command({
+    command: "init", // 不具名参数
+    describe: "初始化：解析源模块并更新依赖关系",
+    builder: {
+      projectPath: {
+        describe: "项目路径: 默认当前路径，全量",
+        type: "string",
+        default: "./",
+      },
+    },
+    async handler(argv: Record<string, any>) {
+      await cpModulesToSrc(argv.projectPath);
+      await updatePackageInfoForSrcModule(argv.projectPath);
+    },
+  })
   .command({
     command: "cp", // 不具名参数
     describe: "复制源码库到src_modules",

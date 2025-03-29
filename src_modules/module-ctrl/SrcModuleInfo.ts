@@ -7,12 +7,22 @@ import {
 import { Cache_Createor } from "./Cache_Createor";
 
 import fs, { statSync } from "fs";
+import { Exception } from "exception";
 type PackageInfo = Record<string, any>;
 
 type ModuleItem = {
+  /** 模块名称 */
   name: string;
+  /** 相对路径 */
   src: string;
+  /** 版本 */
   version: string;
+  /** 文件路径 */
+  fileUrl: string;
+  /** 完整的package.json信息 */
+  packageInfo: Record<string, any>;
+  /** 是否时srcmodule */
+  isSrcModule: boolean;
 };
 
 type ModuleDeps = Record<string, Array<string>>;
@@ -21,6 +31,10 @@ type ModuleMap = Record<string, ModuleItem>;
 // // SrcModule规范
 // const pinfo = {
 //   srcModule: {
+//     dist: { // 表示需要build
+//       ".": "./index.ts",
+//       "./Xxx": "./xx.ts",
+//     },
 //     repo: {
 //       origin: {
 //         remote: "xxx",
@@ -40,24 +54,31 @@ type ModuleMap = Record<string, ModuleItem>;
  * SrcModule信息查询
  */
 export class SrcModuleInfo {
+  /**
+   * 获取项目信息，包含当前项目, 以及SrcModule的子项目
+   * @param projectPath
+   * @returns
+   */
   static getCurrentSrcModulesInfo = async (projectPath: string) => {
     // 缓存仅当前会话有效
     packageInfoCache.clean();
     const srcModulesDir = "src_modules";
     const formatPathUtil = this.formatPath_Creator(projectPath);
-    const moduleList = await getSrcModuleList(
+    const moduleMap = await getSrcModuleList(
       path.join(projectPath, srcModulesDir),
       formatPathUtil.toWrite
     );
-    const dependencies = await getDependenciesStatus(
+    const dependencyMap = await getDependenciesStatus(
       path.join(projectPath, srcModulesDir),
-      moduleList
+      moduleMap
     );
     const projectPackInfo = await packageInfoCache.getValue(projectPath);
+    const info = await getSrcModule(projectPath, formatPathUtil.toWrite);
+    moduleMap[info.name] = info;
     if (projectPackInfo) {
-      getDependencieByPackageInfo(dependencies, projectPackInfo, moduleList);
+      getDependencieByPackageInfo(dependencyMap, projectPackInfo, moduleMap);
     }
-    return { moduleList, dependencies };
+    return { moduleMap, dependencyMap };
   };
   /**
    * 【工厂函数】创建一个函数：获取到指定路径的相对路径
@@ -78,6 +99,11 @@ export class SrcModuleInfo {
     );
   };
 
+  /**
+   * 判断项目是否为SrcModule
+   * @param filePath
+   * @returns
+   */
   static isSrcModule = async (filePath: string) => {
     const isNM = await this.isNodeModule(filePath);
     if (!isNM) {
@@ -89,6 +115,14 @@ export class SrcModuleInfo {
     }
     return !!data.srcModule;
   };
+
+  /**
+   * 获取项目是否为SrcModule
+   * @param info packageJsonData
+   * @returns
+   */
+  static getIsSrcModuleByPackageInfo = getIsSrcModuleByPackageInfo;
+
   /**
    * 返回node_nodules的package信息, 如果不是node_modules则返回false
    * @param projectPath 项目文件夹
@@ -119,10 +153,72 @@ export class SrcModuleInfo {
   static isCleanPackage = async (packagePath: string) => {
     return true;
   };
+
+  /**
+   * 通过pkgInfo 获取模块打包信息
+   * @param pkgInfo
+   * @returns
+   */
+  static getBuildConfigByPkgInfo(pkgInfo: Record<string, any>) {
+    if (pkgInfo.srcModule?.dist?.length) {
+      return [];
+    }
+    const index = {
+      input: pkgInfo.srcModule.dist["."], // 输入路径：例如 './index.ts'
+      output: {
+        import: pkgInfo.module,
+        require: pkgInfo.main,
+        types: pkgInfo.types,
+      },
+    };
+    [].filter;
+    const ohter = Object.keys(pkgInfo.dist)
+      .filter((key) => key !== ".")
+      .map((key) => {
+        const input = pkgInfo.dist[key];
+        const output = pkgInfo.exports[key];
+        return {
+          input,
+          output,
+        };
+      });
+    return [index].concat(ohter);
+  }
 }
 
 /** package.json 数据缓冲池 */
 const packageInfoCache = Cache_Createor(SrcModuleInfo.readPackageInfo);
+
+const getSrcModule = async (
+  mf: string,
+  formatSrc?: (src: string) => string
+) => {
+  const info = await packageInfoCache.getValue(mf);
+  if (!info) {
+    return Exception.throw("1000", { contentMsg: mf });
+  }
+  return {
+    src: formatSrc ? formatSrc(mf) : mf,
+    version: info.version,
+    name: info.name,
+    fileUrl: mf,
+    packageInfo: info,
+    isSrcModule: getIsSrcModuleByPackageInfo(info),
+  };
+};
+
+/**
+ * 判断项目是否为SrcModule
+ * @param info packageJsonData
+ * @returns
+ */
+function getIsSrcModuleByPackageInfo(info: false | Record<string, any>) {
+  const data = info;
+  if (typeof data === "boolean") {
+    return data;
+  }
+  return !!data.srcModule;
+}
 
 /** 模块列表 */
 const getSrcModuleList = async (
@@ -133,13 +229,9 @@ const getSrcModuleList = async (
   const srcModules: ModuleMap = {};
   for (const f of files) {
     const mf = path.join(srcModulesPath, f);
-    const info = await packageInfoCache.getValue(mf);
-    if (info && info.isSrcModule) {
-      srcModules[info.name] = {
-        src: formatSrc ? formatSrc(mf) : mf,
-        version: info.version,
-        name: info.name,
-      };
+    const info = await getSrcModule(mf, formatSrc);
+    if (info) {
+      srcModules[info.name] = info;
     }
   }
   return srcModules;
@@ -159,7 +251,7 @@ function getDependencieByPackageInfo(
 ) {
   const name = packInfo.name;
   for (const depKey of depKeys) {
-    const deps = packInfo[depKey];
+    const deps = packInfo[depKey] || [];
     for (const depName of Object.keys(deps)) {
       if (srcModules[depName]) {
         if (!moduleDeps[name]) {
