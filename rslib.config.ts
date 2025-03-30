@@ -9,7 +9,7 @@ import { PluginResolveSrc } from "./src/PluginResolveSrc";
 
 export default defineConfig(async () => {
   const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo("./");
-  const swapDtsDistpath = "./._dist_dts";
+  const swapDtsDistpath = "./node_modules/._dist_dts";
   return {
     source: {
       tsconfigPath: "./tsconfig.json",
@@ -28,6 +28,7 @@ export default defineConfig(async () => {
     output: {
       target: "node",
     },
+    mode: "production",
     lib: [
       {
         format: "cjs",

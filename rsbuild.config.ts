@@ -8,7 +8,7 @@ import path from "path";
 import { PluginResolveSrc } from "./src/PluginResolveSrc";
 
 const SPLIT_CONST = "_";
-const swapDtsDistpath = "./._dist_dts";
+const swapDtsDistpath = "./node_modules/._dist_dts";
 
 export default defineConfig(async function () {
   const { moduleMap: moduleList } =
