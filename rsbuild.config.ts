@@ -1,27 +1,25 @@
 import { defineConfig } from "@rsbuild/core";
 import { pluginNodePolyfill } from "@rsbuild/plugin-node-polyfill";
-import { SrcModuleInfo } from "module-ctrl";
+import { SrcModuleInfo, windowsPathToLinuxPath } from "module-ctrl";
+import { PluginModulesOutput } from "./src/PluginModulesOutput";
+import { RegRspackPlugins } from "./src/RegRspackPlugins";
+import { PluginRspackModulesOutput } from "./src/PluginRspackModulesOutput";
+import path from "path";
 
+const SPLIT_CONST = "_";
 export default defineConfig(async function () {
-  const { moduleList } = await SrcModuleInfo.getCurrentSrcModulesInfo("./");
-  const modulesInfo = await Promise.all(
-    Object.keys(moduleList).map(async (moduleName) => {
-      // return
-      const mdInfo = await SrcModuleInfo.readPackageInfo(
-        moduleList[moduleName].fileUrl
-      );
-      return mdInfo;
-    })
-  );
+  const { moduleMap: moduleList } =
+    await SrcModuleInfo.getCurrentSrcModulesInfo("./");
   const entry = {};
-  modulesInfo
-    .filter((i) => {
-      return !!i && i.srcModule?.build;
-    })
-    .forEach((info) => {
-      // entry;
-      console.log("info", info);
-    });
+  for (const key of Object.keys(moduleList)) {
+    const it = moduleList[key];
+    SrcModuleInfo.getBuildConfigByPkgInfo(it.packageInfo).forEach(
+      (entryInfo) => {
+        entry[`${it.name}${SPLIT_CONST}${entryInfo.input.name}`] =
+          windowsPathToLinuxPath(path.join(it.src, entryInfo.input.src), true);
+      }
+    );
+  }
 
   return {
     tools: {
@@ -31,31 +29,12 @@ export default defineConfig(async function () {
     },
     plugins: [
       pluginNodePolyfill(),
-      // {
-      //   name: "modules-output",
-      //   setup(api) {
-      //     api.modifyBundlerChain((chain) => {
-      //       // 遍历所有入口
-      //       // chain.entryPoints.forEach((entry, name) => {
-      //       //   // // 根据入口名称动态修改输出路径
-      //       //   // entry.values.forEach((value) => {
-      //       //   //   if (name === "app1") {
-      //       //   //     chain.output.path("dist/custom-folder-for-app1");
-      //       //   //   } else if (name === "app2") {
-      //       //   //     chain.output.path("dist/custom-folder-for-app2");
-      //       //   //   }
-      //       //   // });
-      //       //   console.log(entry.values);
-      //       // });
-      //     });
-      //   },
-      // },
+      PluginModulesOutput(),
+      RegRspackPlugins(new PluginRspackModulesOutput(moduleList, "./dist")),
     ],
     // environments
     source: {
-      entry: {
-        index: "./src/index.ts",
-      },
+      entry,
     },
     mode: "production",
     output: {

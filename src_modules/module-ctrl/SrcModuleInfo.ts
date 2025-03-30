@@ -23,10 +23,12 @@ type ModuleItem = {
   packageInfo: Record<string, any>;
   /** 是否时srcmodule */
   isSrcModule: boolean;
+  /** 是否是根目录 */
+  isRoot?: boolean;
 };
 
-type ModuleDeps = Record<string, Array<string>>;
-type ModuleMap = Record<string, ModuleItem>;
+export type ModuleDeps = Record<string, Array<string>>;
+export type ModuleMap = Record<string, ModuleItem>;
 
 // // SrcModule规范
 // const pinfo = {
@@ -54,6 +56,7 @@ type ModuleMap = Record<string, ModuleItem>;
  * SrcModule信息查询
  */
 export class SrcModuleInfo {
+  static SRC_MODULES = "src_modules";
   /**
    * 获取项目信息，包含当前项目, 以及SrcModule的子项目
    * @param projectPath
@@ -62,7 +65,7 @@ export class SrcModuleInfo {
   static getCurrentSrcModulesInfo = async (projectPath: string) => {
     // 缓存仅当前会话有效
     packageInfoCache.clean();
-    const srcModulesDir = "src_modules";
+    const srcModulesDir = this.SRC_MODULES;
     const formatPathUtil = this.formatPath_Creator(projectPath);
     const moduleMap = await getSrcModuleList(
       path.join(projectPath, srcModulesDir),
@@ -74,7 +77,7 @@ export class SrcModuleInfo {
     );
     const projectPackInfo = await packageInfoCache.getValue(projectPath);
     const info = await getSrcModule(projectPath, formatPathUtil.toWrite);
-    moduleMap[info.name] = info;
+    moduleMap[info.name] = { ...info, isRoot: true };
     if (projectPackInfo) {
       getDependencieByPackageInfo(dependencyMap, projectPackInfo, moduleMap);
     }
@@ -160,22 +163,29 @@ export class SrcModuleInfo {
    * @returns
    */
   static getBuildConfigByPkgInfo(pkgInfo: Record<string, any>) {
-    if (pkgInfo.srcModule?.dist?.length) {
+    if (!pkgInfo.srcModule?.dist) {
       return [];
     }
     const index = {
-      input: pkgInfo.srcModule.dist["."], // 输入路径：例如 './index.ts'
+      input: {
+        name: "cuurent",
+        key: ".",
+        src: pkgInfo.srcModule.dist["."],
+      }, // 输入路径：例如 './index.ts'
       output: {
         import: pkgInfo.module,
         require: pkgInfo.main,
         types: pkgInfo.types,
       },
     };
-    [].filter;
-    const ohter = Object.keys(pkgInfo.dist)
+    const ohter = Object.keys(pkgInfo.srcModule.dist)
       .filter((key) => key !== ".")
       .map((key) => {
-        const input = pkgInfo.dist[key];
+        const input = {
+          name: encodeURIComponent(key),
+          key,
+          src: pkgInfo.srcModule.dist[key],
+        };
         const output = pkgInfo.exports[key];
         return {
           input,

@@ -8,19 +8,29 @@
     "build:lib": "rslib build",
     "dev:lib": "rslib build --watch"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "epm": "./dist/index.js"
   },
+  "srcModule": {
+    "dist": {
+      ".": "./src/index.ts"
+    }
+  },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.52.2",
-    "@rsbuild/core": "^1.2.3",
+    "@rsbuild/core": "^1.3.0",
     "@rsbuild/plugin-node-polyfill": "^1.3.0",
-    "@rslib/core": "^0.5.5",
-    "@types/node": "^22.13.4",
+    "@rslib/core": "^0.6.0",
+    "@types/node": "^22.13.14",
     "@types/yargs": "^17.0.33",
     "exception": "./src_modules/exception",
     "module-ctrl": "./src_modules/module-ctrl",
-    "typescript": "^5.7.3",
+    "typescript": "^5.8.2",
     "yargs": "^17.7.2"
+  },
+  "dependencies": {
+    "@rspack/core": "^1.3.0"
   }
 }
