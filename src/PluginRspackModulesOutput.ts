@@ -98,6 +98,11 @@ export class PluginRspackModulesOutput implements RspackPluginInstance {
           if (!existsSync(path.dirname(srcUrl))) {
             mkdirSync(path.dirname(srcUrl));
           }
+          // console.log("---------renameSync");
+          // console.log("srcUrl", srcUrl);
+          // console.log("name", name);
+          // console.log("---------renameSync");
+
           renameSync(srcUrl, name);
         });
     });

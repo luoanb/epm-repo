@@ -8,7 +8,7 @@ import { PluginRspackModulesOutput } from "./src/PluginRspackModulesOutput";
 
 export default defineConfig(async () => {
   const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo("./");
-  const swapDtsDistpath = "./dist";
+  const swapDtsDistpath = "./._dist_dts";
   return {
     source: {
       tsconfigPath: "./tsconfig.json",

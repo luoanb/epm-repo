@@ -13,3 +13,4 @@ dist/
 .idea
 
 .gitcp/
+._dist_dts
