@@ -37,6 +37,9 @@ devDependencies:
   typescript:
     specifier: ^5.8.2
     version: 5.8.2
+  vcs:
+    specifier: ./src_modules/vcs
+    version: link:src_modules/vcs
   yargs:
     specifier: ^17.7.2
     version: 17.7.2

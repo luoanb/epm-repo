@@ -1,9 +1,8 @@
 import { RsbuildConfig, RsbuildPlugin } from "@rsbuild/core";
-import { Filename } from "@rspack/core";
-import { ModuleMap, SrcModuleInfo, windowsPathToLinuxPath } from "module-ctrl";
+import { SrcModuleInfo, windowsPathToLinuxPath } from "module-ctrl";
 import path from "path";
 
-type DeepRequired<T> = T extends object
+export type DeepRequired<T> = T extends object
   ? {
       [P in keyof T]-?: T[P] extends (infer U)[]
         ? DeepRequired<U>[]

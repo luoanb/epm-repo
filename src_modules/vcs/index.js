@@ -27,7 +27,7 @@ __webpack_require__.d(__webpack_exports__, {
     Test: ()=>Test
 });
 const Test = {
-    name: "Test"
+    name: "我是打包模式测试"
 };
 exports.Test = __webpack_exports__.Test;
 for(var __webpack_i__ in __webpack_exports__)if (-1 === [

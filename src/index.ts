@@ -5,6 +5,8 @@ import {
 } from "module-ctrl";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
+import { setTsconfigSrcmodule } from "./setTsconfigSrcmodule";
+import { Test } from "vcs";
 
 yargs(hideBin(process.argv))
   .command({
@@ -64,6 +66,20 @@ yargs(hideBin(process.argv))
       await updatePackageInfoForSrcModule(argv.projectPath);
     },
   })
+  .command({
+    command: "updateTsconfig", // 不具名参数
+    describe: "更新src_modules模块的导入别名",
+    builder: {
+      projectPath: {
+        describe: "项目路径: 默认当前路径，全量",
+        type: "string",
+        default: "./",
+      },
+    },
+    async handler(argv: Record<string, any>) {
+      await setTsconfigSrcmodule(argv.projectPath);
+    },
+  })
   .strictCommands()
-  .demandCommand(1) /// 至少需要一个子命令
+  .demandCommand(1, Test.name) /// 至少需要一个子命令
   .help().argv;

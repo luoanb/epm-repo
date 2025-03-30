@@ -5,6 +5,7 @@ import path from "path";
 import { PluginModulesOutput } from "./src/PluginModulesOutput";
 import { RegRspackPlugins } from "./src/RegRspackPlugins";
 import { PluginRspackModulesOutput } from "./src/PluginRspackModulesOutput";
+import { PluginResolveSrc } from "./src/PluginResolveSrc";
 
 export default defineConfig(async () => {
   const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo("./");
@@ -17,16 +18,20 @@ export default defineConfig(async () => {
       },
     },
     plugins: [
-      // pluginNodePolyfill(),
+      pluginNodePolyfill(),
       PluginModulesOutput(),
+      PluginResolveSrc(),
       RegRspackPlugins(
         new PluginRspackModulesOutput(moduleMap, swapDtsDistpath)
       ),
     ],
+    output: {
+      target: "node",
+    },
     lib: [
       {
-        format: "esm",
-        syntax: "es2021",
+        format: "cjs",
+        syntax: "es2015",
         dts: {
           bundle: true,
           distPath: swapDtsDistpath,

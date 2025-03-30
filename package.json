@@ -27,6 +27,7 @@
     "@types/yargs": "^17.0.33",
     "exception": "./src_modules/exception",
     "module-ctrl": "./src_modules/module-ctrl",
+    "vcs": "./src_modules/vcs",
     "typescript": "^5.8.2",
     "yargs": "^17.7.2"
   },

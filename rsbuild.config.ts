@@ -5,6 +5,7 @@ import { PluginModulesOutput } from "./src/PluginModulesOutput";
 import { RegRspackPlugins } from "./src/RegRspackPlugins";
 import { PluginRspackModulesOutput } from "./src/PluginRspackModulesOutput";
 import path from "path";
+import { PluginResolveSrc } from "./src/PluginResolveSrc";
 
 const SPLIT_CONST = "_";
 const swapDtsDistpath = "./._dist_dts";
@@ -32,6 +33,7 @@ export default defineConfig(async function () {
     plugins: [
       pluginNodePolyfill(),
       PluginModulesOutput(),
+      PluginResolveSrc(),
       RegRspackPlugins(
         new PluginRspackModulesOutput(moduleList, swapDtsDistpath)
       ),
