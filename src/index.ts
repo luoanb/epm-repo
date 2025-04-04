@@ -7,6 +7,8 @@ import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { setTsconfigSrcmodule } from "./setTsconfigSrcmodule";
 import { Test } from "vcs";
+import { Shell } from "./utils/Shell";
+import { buildByRsbuild, buildByRslib } from "./build";
 
 yargs(hideBin(process.argv))
   .command({
@@ -80,6 +82,50 @@ yargs(hideBin(process.argv))
       await setTsconfigSrcmodule(argv.projectPath);
     },
   })
-  .strictCommands()
+  .command({
+    command: "shell", // 执行shell指令
+    describe: "执行终端指令",
+    builder: {},
+    async handler(argv: Record<string, any>) {
+      Shell.exec(argv._.join(" "))
+    },
+  })
+  .command({
+    command: "build", // 打包
+    describe: "打包",
+    builder: {
+      config: {
+        alias: "c",
+        describe: "配置文件路径",
+        type: "string",
+        default: "./rslib.config.ts",
+      },
+      watch: {
+        alias: "w",
+        describe: "是否开启监听",
+        type: "boolean",
+        default: false,
+      },
+      useRsbuild: {
+        describe: "是否使用rsbuild打包",
+        type: "boolean",
+        default: false,
+      }
+    },
+    async handler(argv: Record<string, any>) {
+      // Shell.exec(`npx rsbuild build -c=src/rsbuild.config.ts ${argv._.join(" ")}`)
+      if (argv.useRsbuild) {
+        buildByRsbuild(argv)
+      } else {
+        buildByRslib(argv)
+      }
+      // buildByRslib(argv)
+    },
+  })
+  .parserConfiguration({
+    "unknown-options-as-args": true, // 将未知选项作为参数收集
+  })
+  .option("known", { type: "string" })
+  // .strict(false)
   .demandCommand(1, Test.name) /// 至少需要一个子命令
   .help().argv;

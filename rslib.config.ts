@@ -1,34 +1,10 @@
-import { pluginNodePolyfill } from "@rsbuild/plugin-node-polyfill";
+import { rsConfigBaseConstructor, swapDtsDistpath } from "./src/rsConfigBaseConstructor"
 import { defineConfig } from "@rslib/core";
-import { SrcModuleInfo, windowsPathToLinuxPath } from "module-ctrl";
-import path from "path";
-import { PluginModulesOutput } from "./src/PluginModulesOutput";
-import { RegRspackPlugins } from "./src/RegRspackPlugins";
-import { PluginRspackModulesOutput } from "./src/PluginRspackModulesOutput";
-import { PluginResolveSrc } from "./src/PluginResolveSrc";
 
+// @ts-ignore
 export default defineConfig(async () => {
-  const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo("./");
-  const swapDtsDistpath = "./node_modules/._dist_dts";
   return {
-    source: {
-      tsconfigPath: "./tsconfig.json",
-      entry: {
-        "epm-repo_cuurent": "./src/index.ts",
-      },
-    },
-    plugins: [
-      pluginNodePolyfill(),
-      PluginModulesOutput(),
-      PluginResolveSrc(),
-      RegRspackPlugins(
-        new PluginRspackModulesOutput(moduleMap, swapDtsDistpath)
-      ),
-    ],
-    output: {
-      target: "node",
-    },
-    mode: "production",
+    ...  await rsConfigBaseConstructor(),
     lib: [
       {
         format: "cjs",
@@ -39,5 +15,5 @@ export default defineConfig(async () => {
         },
       },
     ],
-  };
-});
+  }
+})

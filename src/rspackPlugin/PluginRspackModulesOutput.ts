@@ -1,14 +1,14 @@
 import type { Compiler, RspackPluginInstance } from "@rspack/core";
-import { mkdirSync, readdirSync, renameSync, existsSync } from "fs";
+import { mkdirSync, readdirSync, renameSync, existsSync, fsyncSync } from "fs";
 import { ModuleMap, SrcModuleInfo, windowsPathToLinuxPath } from "module-ctrl";
-import { SPLIT_CONST } from "./PluginModulesOutput";
+import { SPLIT_CONST } from "../plugin/PluginModulesOutput";
 import path from "path";
-import { Exception } from "../src_modules/exception";
+import { Exception } from "../../src_modules/exception";
 
 const PLUGIN_NAME = "PluginRspackModulesOutput";
 
 export class PluginRspackModulesOutput implements RspackPluginInstance {
-  constructor(private moduleMap: ModuleMap, private swapDtsDistpath: string) {}
+  constructor(private moduleMap: ModuleMap, private swapDtsDistpath: string) { }
   getName(...paths: string[]) {
     return windowsPathToLinuxPath(path.join(...paths), true);
   }
@@ -90,21 +90,22 @@ export class PluginRspackModulesOutput implements RspackPluginInstance {
     });
     compiler.hooks.afterDone.tap(PLUGIN_NAME, () => {
       const getDtsFileName = (name: string) => this.getFileName(name, "ts");
-      readdirSync(this.swapDtsDistpath)
-        .filter((fileName) => fileName.endsWith("d.ts"))
-        .forEach((url) => {
-          const name = getDtsFileName(url);
-          const srcUrl = path.join(this.swapDtsDistpath, url);
-          if (!existsSync(path.dirname(srcUrl))) {
-            mkdirSync(path.dirname(srcUrl));
-          }
-          // console.log("---------renameSync");
-          // console.log("srcUrl", srcUrl);
-          // console.log("name", name);
-          // console.log("---------renameSync");
-
-          renameSync(srcUrl, name);
-        });
+      if (existsSync(this.swapDtsDistpath)) {
+        readdirSync(this.swapDtsDistpath)
+          .filter((fileName) => fileName.endsWith("d.ts"))
+          .forEach((url) => {
+            const name = getDtsFileName(url);
+            const srcUrl = path.join(this.swapDtsDistpath, url);
+            if (!existsSync(path.dirname(srcUrl))) {
+              mkdirSync(path.dirname(srcUrl));
+            }
+            // console.log("---------renameSync");
+            // console.log("srcUrl", srcUrl);
+            // console.log("name", name);
+            // console.log("---------renameSync");
+            renameSync(srcUrl, name);
+          });
+      }
     });
   }
 }
