@@ -8,7 +8,6 @@ import { hideBin } from "yargs/helpers";
 import { setTsconfigSrcmodule } from "./setTsconfigSrcmodule";
 import { Test } from "vcs";
 import { Shell } from "./utils/Shell";
-import { buildByRsbuild, buildByRslib } from "./build";
 
 yargs(hideBin(process.argv))
   .command({
@@ -113,13 +112,7 @@ yargs(hideBin(process.argv))
       }
     },
     async handler(argv: Record<string, any>) {
-      // Shell.exec(`npx rsbuild build -c=src/rsbuild.config.ts ${argv._.join(" ")}`)
-      if (argv.useRsbuild) {
-        buildByRsbuild(argv)
-      } else {
-        buildByRslib(argv)
-      }
-      // buildByRslib(argv)
+      console.log("argv", argv);
     },
   })
   .parserConfiguration({

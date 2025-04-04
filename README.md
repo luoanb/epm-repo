@@ -4,6 +4,8 @@ Es Module Publish Cli
 
 提供一个新的资源分发思路：我们不再对打包的制品进行分发，而是直接分发源码。仅在最后制成具体 App 时才进行最后的打包。
 
+`npx esbuild src/build/bundle/index.ts --outfile=build.js --bundle --platform=node --external:esbuild`
+
 # 模块规范
 
 ```json
