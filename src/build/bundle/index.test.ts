@@ -2,15 +2,15 @@ import { buildOnePlatForm } from ".";
 import { test } from "vitest"
 
 test("js build base", async () => {
-  buildOnePlatForm({
+  await buildOnePlatForm({
     isBin: true,
     platform: "node",
     format: "cjs",
     outdir: "./",
     entryPoints: [
       {
-        in: './src/build/bundle/index.ts',
-        out: './build.common',
+        in: './src/test1.ts',
+        out: './dist/test1.js',
       }
     ]
   })

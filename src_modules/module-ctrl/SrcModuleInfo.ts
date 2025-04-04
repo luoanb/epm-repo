@@ -6,11 +6,11 @@ import {
 } from "./updatePackageInfoForSrcModule";
 import { Cache_Createor } from "./Cache_Createor";
 
-import fs, { statSync } from "fs";
+import fs, { existsSync, statSync } from "fs";
 import { Exception } from "exception";
 type PackageInfo = Record<string, any>;
 
-type ModuleItem = {
+export type ModuleItem = {
   /** 模块名称 */
   name: string;
   /** 相对路径 */
@@ -97,7 +97,7 @@ export class SrcModuleInfo {
   };
   static isNodeModule = async (filePath: string) => {
     return (
-      (await stat(filePath)).isDirectory() &&
+      existsSync(filePath) && (await stat(filePath)).isDirectory() &&
       fs.existsSync(path.join(filePath, "package.json"))
     );
   };

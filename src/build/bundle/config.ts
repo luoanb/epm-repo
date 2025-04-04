@@ -1,9 +1,9 @@
 import { BuildOptions } from "esbuild";
 
-export const config: BuildOptions = {
+export const bundleConfig: BuildOptions = {
   bundle: true,
   platform: "node",
-  write: true,
+  write: false,
   external: [
     "esbuild"
   ]

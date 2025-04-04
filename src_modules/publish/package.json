@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "module": "index.mjs",
   "types": "index.d.ts",
+  "platform":"web",
   "exports": {
     "./test": {
       "import": "./test.mjs",

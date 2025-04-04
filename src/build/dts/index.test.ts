@@ -9,4 +9,4 @@ test("dts build base", async () => {
       publicTrimmedFilePath: "./test1.d.ts"
     }
   })
-})
+}, 1000 * 60)

@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild"
-import { config } from "./config"
+import { bundleConfig } from "./config"
+import { pluginRename } from "./pluginRename"
 export interface BuildOnePlatFormOptions extends esbuild.BuildOptions {
   /** 是否时可执行脚本 */
   isBin?: boolean
@@ -9,21 +10,28 @@ export interface BuildOnePlatFormOptions extends esbuild.BuildOptions {
 }
 export async function buildOnePlatForm({ isBin, banner, watch, serve, custom, ...options }: BuildOnePlatFormOptions) {
   const ctx = await esbuild.context({
-    ...config,
+    ...bundleConfig,
     banner: {
       ...banner,
       js: isBin ? `#!/usr/bin/env node` : banner?.js || '',
     },
+    plugins: [
+      pluginRename
+    ],
+    // entryNames: '[dir]/[name]',
     ...options
   })
   if (watch) {
     ctx.watch()
+    return ctx
   } else if (serve) {
     ctx.serve()
+    return ctx
   } else if (custom) {
     return ctx
   } else {
-    ctx.dispose()
+    await ctx.rebuild()
+    return ctx
   }
 }
 

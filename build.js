@@ -63,8 +63,8 @@ buildOnePlatForm({
   outdir: "./",
   entryPoints: [
     {
-      in: "./src/build/bundle/index.ts",
-      out: "./build.common"
+      in: "./src/index.ts",
+      out: "./index.js"
     }
   ]
 }).then(async (res) => {
