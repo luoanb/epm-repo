@@ -17,8 +17,8 @@ export const setTsconfigSrcmodule = async (projectPath: string) => {
         paths[
           `${windowsPathToLinuxPath(path.join(it.name, entryInfo.input.key))}`
         ] = [
-          windowsPathToLinuxPath(path.join(it.src, entryInfo.input.src), true),
-        ];
+            windowsPathToLinuxPath(path.join(it.src, entryInfo.input.src), true),
+          ];
       }
     );
   }
@@ -27,7 +27,7 @@ export const setTsconfigSrcmodule = async (projectPath: string) => {
   } else if (!tsconfig.compilerOptions) {
     tsconfig.compilerOptions = { paths };
   } else {
-    tsconfig.paths = paths;
+    tsconfig.compilerOptions.paths = paths;
   }
   return await wirteJsonFile(filePath, tsconfig, 2);
 };

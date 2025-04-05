@@ -1,6 +1,6 @@
 import * as esbuild from "esbuild"
 import { bundleConfig } from "./config"
-import { pluginRename } from "./pluginRename"
+
 export interface BuildOnePlatFormOptions extends esbuild.BuildOptions {
   /** 是否时可执行脚本 */
   isBin?: boolean
@@ -15,10 +15,6 @@ export async function buildOnePlatForm({ isBin, banner, watch, serve, custom, ..
       ...banner,
       js: isBin ? `#!/usr/bin/env node` : banner?.js || '',
     },
-    plugins: [
-      pluginRename
-    ],
-    // entryNames: '[dir]/[name]',
     ...options
   })
   if (watch) {

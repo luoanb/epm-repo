@@ -12,11 +12,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "epm": "./dist/index.js"
+    "epm": "./src/bin.cjs"
   },
   "srcModule": {
+    "isRoot":true,
+    "buildType":"lib",
     "dist": {
-      ".": "./src/index.ts"
+      ".": "./src/index.ts",
+      "./bin": "./src/bin.ts"
     }
   },
   "devDependencies": {

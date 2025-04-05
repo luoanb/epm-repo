@@ -18,9 +18,9 @@ export const dts = async ({ root = cwd(), projectPath = '', mainEntryPointFilePa
   if (!packageJson) {
     return
   }
-  await Shell.exec(`tsc ${mainEntryPointFilePath} --declaration  --emitDeclarationOnly  --outDir ./node_modules/._dist_dts`)
+  await Shell.exec(`tsc ${mainEntryPointFilePath} --declaration  --emitDeclarationOnly  --outDir ./node_modules/._dist_dts/${mainEntryPointFilePath}`) // 每个声明独立空间，不然有重名风险
 
-  const aburl = path.join('./node_modules/._dist_dts', path.basename(mainEntryPointFilePath.replace(path.extname(mainEntryPointFilePath), ".d.ts")))
+  const aburl = path.join(`./node_modules/._dist_dts/${mainEntryPointFilePath}`, path.basename(mainEntryPointFilePath.replace(path.extname(mainEntryPointFilePath), ".d.ts")))
   const config = ExtractorConfig.prepare({
     configObject: { ...dtsConfig, ...options, mainEntryPointFilePath: aburl },
     configObjectFullPath: undefined,

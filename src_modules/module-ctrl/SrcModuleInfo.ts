@@ -33,6 +33,9 @@ export type ModuleMap = Record<string, ModuleItem>;
 // // SrcModule规范
 // const pinfo = {
 //   srcModule: {
+//     isRoot: boolean, // 是否是更目录
+//     buildType: "lib"|"web-app", // web-app会注入html, 默认lib
+//     platform: "web"|"node",
 //     dist: { // 表示需要build
 //       ".": "./index.ts",
 //       "./Xxx": "./xx.ts",
@@ -181,12 +184,23 @@ export class SrcModuleInfo {
     const ohter = Object.keys(pkgInfo.srcModule.dist)
       .filter((key) => key !== ".")
       .map((key) => {
+        const src: string = pkgInfo.srcModule.dist[key]
+        const srcName = src.replace(path.extname(src), '')
         const input = {
           name: encodeURIComponent(key),
           key,
-          src: pkgInfo.srcModule.dist[key],
+          src,
         };
-        const output = pkgInfo.exports[key];
+        const output = pkgInfo.exports?.[key] || {
+          import: srcName + ".js",
+          require: srcName + ".cjs",
+          types: srcName + ".d.ts",
+        }
+        if (!pkgInfo.exports?.[key]) {
+
+          console.log(srcName, "-----------");
+        }
+
         return {
           input,
           output,

@@ -1,6 +1,5 @@
-export declare const Test: {
-    /**模块测试 */
+export declare function getPackageState(): Promise<{
     name: string;
-};
+}>;
 
 export { }
