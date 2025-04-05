@@ -38,7 +38,7 @@ yargs(hideBin(process.argv))
       moduleName: {
         describe: "指定具体模块",
         type: "string",
-        default: '',
+        default: "",
       },
       all: {
         describe: "复制所有",
@@ -87,7 +87,7 @@ yargs(hideBin(process.argv))
     describe: "执行终端指令",
     builder: {},
     async handler(argv: Record<string, any>) {
-      Shell.exec(argv._.join(" "))
+      Shell.exec(argv._.join(" "));
     },
   })
   .command({
@@ -96,7 +96,8 @@ yargs(hideBin(process.argv))
     builder: {
       watch: {
         alias: "w",
-        describe: "是否开启监听, 为了提升性能，监听模式只会打包根模块或请指定具体模块",
+        describe:
+          "是否开启监听, 为了提升性能，监听模式只会打包根模块或请指定具体模块",
         type: "boolean",
         default: false,
       },
@@ -109,11 +110,16 @@ yargs(hideBin(process.argv))
         describe: "是否打包全部: build模式默认开启，监听模式默认关闭",
         type: "boolean",
         default: false,
-      }
+      },
+      dts: {
+        describe: "是否强制打包d.ts声明文明(监听模式默认不生成d.ts)",
+        type: "boolean",
+        default: false,
+      },
     },
     async handler(argv: Record<string, any>) {
-      // @ts-expect-error 
-      await build(argv)
+      // @ts-expect-error
+      await build(argv);
     },
   })
   .parserConfiguration({

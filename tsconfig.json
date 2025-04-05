@@ -19,5 +19,5 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["src", "src_modules", "rsbuild.config", "rslib.config"]
+  "include": ["src", "src_modules"]
 }

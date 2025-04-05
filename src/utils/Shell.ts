@@ -1,5 +1,5 @@
 import { exec, execSync } from "child_process";
-
+import iconv from "iconv-lite"
 export interface ShellExecRes {
   /** 执行结果:0:正确执行完, 1:进程执行出错,2:进程被终止,3:进程不存在 */
   code: 0 | 1 | 2 | 3
@@ -11,7 +11,10 @@ export interface ShellExecRes {
   data?: any
 }
 
+const isWindows = process.platform === 'win32';
 export class Shell {
+
+  static isWindows = isWindows
   /**
    * 判断命令是否存在
    * @param command
@@ -48,13 +51,15 @@ export class Shell {
    */
   static exec(command: string) {
     return new Promise<ShellExecRes>((res) => {
-      const child = exec(command);
+      const child = exec(command, { encoding: 'buffer' });
       child.stdout?.on('data', data => {
-        console.log(`${command.substring(0, 10)}: ${data}`);
+        const out = this.isWindows ? iconv.decode(data, "gbk") : data.toString('utf8')
+        console.log(`${command.substring(0, 10)}: ${out}`);
       })
       // 实时输出标准错误
       child.stderr?.on('data', (data) => {
-        console.error(`${command.substring(0, 10)}: ${data}`);
+        const out = this.isWindows ? iconv.decode(data, "gbk") : data.toString('utf8')
+        console.error(`${command.substring(0, 10)}: ${out}`);
       });
       child.on('error', (err) => {
         res({

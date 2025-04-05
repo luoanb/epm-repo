@@ -25,19 +25,27 @@ async function writeFileBuffer(url: string, data: any) {
  * @param options.rename 定制名称方法
  * @returns 
  */
-export const pluginRename = ({ rename, write }: PluginRenameOptions) => {
+export const pluginRename = ({ rename, write = true }: PluginRenameOptions) => {
   return {
     name: "pluginRename",
     setup(build) {
-      build.onEnd((res) => {
-        res.outputFiles?.forEach(async (file) => {
+      build.onEnd(async (res) => {
+        if (!res.outputFiles) {
+          return // 返回原对象也会校验出错，直接返回void
+        }
+        const filesP = res.outputFiles?.map(async (file) => {
           const newPath = await rename(file)
           if (write) {
             await writeFileBuffer(newPath, file.contents)
+            return file
           } else {
-            console.log(`${file.path}:${newPath}`);
+            console.log(`filepath: ${file.path} => ${newPath}`);
+            // file.path = newPath
+            return file
           }
         });
+        await Promise.all(filesP)
+        return
       })
     },
   } satisfies esbuild.Plugin

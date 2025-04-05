@@ -1,13 +1,11 @@
 {
   "name": "epm-repo",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "test": "vitest",
-    "dev": "rsbuild dev --open",
-    "build": "rsbuild build",
-    "preview": "rsbuild preview",
-    "build:lib": "rslib build",
-    "dev:lib": "rslib build --watch"
+    "postinstall": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor",
+    "build": "node dist/bin.js build",
+    "dev": "node dist/bin.js build --watch"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,25 +13,29 @@
     "epm": "./src/bin.cjs"
   },
   "srcModule": {
-    "isRoot":true,
-    "buildType":"lib",
+    "isRoot": true,
+    "buildType": "lib",
     "dist": {
       ".": "./src/index.ts",
       "./bin": "./src/bin.ts"
     }
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.52.3",
     "@types/dts-bundle": "^0.0.35",
     "@types/node": "^22.14.0",
     "@types/yargs": "^17.0.33",
     "dts-bundle": "^0.7.3",
-    "esbuild": "^0.25.2",
     "exception": "./src_modules/exception",
+    "iconv-lite": "^0.6.3",
     "module-ctrl": "./src_modules/module-ctrl",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "vcs": "./src_modules/vcs",
     "vitest": "^3.1.1",
     "yargs": "^17.7.2"
+  },
+  "dependencies": {
+    "@microsoft/api-extractor": "^7.52.3",
+    "esbuild": "^0.25.2"
   }
 }

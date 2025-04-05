@@ -1,19 +1,18 @@
 {
   "compilerOptions": {
-    "paths": {}
+    "paths": {
+      "publish": [
+        "./src_modules/publish/index.ts"
+      ],
+      "publish/test": [
+        "./src_modules/publish/test.ts"
+      ],
+      "vcs": [
+        "./src_modules/vcs/index.ts"
+      ],
+      "epm-repo": [
+        "./src/index.ts"
+      ]
+    }
   },
-  "paths": {
-    "publish": [
-      "./src_modules/publish/index.ts"
-    ],
-    "publish/test": [
-      "./src_modules/publish/test.ts"
-    ],
-    "vcs": [
-      "./src_modules/vcs/index.ts"
-    ],
-    "epm-repo": [
-      "./src/index.ts"
-    ]
-  }
 }

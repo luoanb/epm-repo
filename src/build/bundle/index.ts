@@ -27,6 +27,7 @@ export async function buildOnePlatForm({ isBin, banner, watch, serve, custom, ..
     return ctx
   } else {
     await ctx.rebuild()
+    ctx.dispose()
     return ctx
   }
 }

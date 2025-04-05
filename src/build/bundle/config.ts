@@ -6,7 +6,7 @@ export const bundleConfig: BuildOptions = {
   platform: "node",
   write: false,
   external: [
-    "esbuild"
+    "esbuild", "@microsoft/api-extractor"
   ],
   plugins: [
     pluginRename({

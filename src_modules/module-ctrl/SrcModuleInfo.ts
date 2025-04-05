@@ -100,7 +100,8 @@ export class SrcModuleInfo {
   };
   static isNodeModule = async (filePath: string) => {
     return (
-      existsSync(filePath) && (await stat(filePath)).isDirectory() &&
+      existsSync(filePath) &&
+      (await stat(filePath)).isDirectory() &&
       fs.existsSync(path.join(filePath, "package.json"))
     );
   };
@@ -184,8 +185,8 @@ export class SrcModuleInfo {
     const ohter = Object.keys(pkgInfo.srcModule.dist)
       .filter((key) => key !== ".")
       .map((key) => {
-        const src: string = pkgInfo.srcModule.dist[key]
-        const srcName = src.replace(path.extname(src), '')
+        const src: string = pkgInfo.srcModule.dist[key];
+        const srcName = src.replace(path.extname(src), "");
         const input = {
           name: encodeURIComponent(key),
           key,
@@ -195,11 +196,7 @@ export class SrcModuleInfo {
           import: srcName + ".js",
           require: srcName + ".cjs",
           types: srcName + ".d.ts",
-        }
-        if (!pkgInfo.exports?.[key]) {
-
-          console.log(srcName, "-----------");
-        }
+        };
 
         return {
           input,
