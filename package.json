@@ -1,16 +1,23 @@
 {
   "name": "epm-repo",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "test": "vitest",
-    "postinstall": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor",
+    "prebuild": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor",
     "build": "node dist/bin.js build",
     "dev": "node dist/bin.js build --watch"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "epm": "./src/bin.cjs"
+    "epm": "./bin/bin.cjs"
+  },
+  "exports": {
+    "./bin": {
+      "import": "./bin/bin.js",
+      "require": "./bin/bin.cjs",
+      "types": "./bin/bin.d.ts"
+    }
   },
   "srcModule": {
     "isRoot": true,
