@@ -19,6 +19,18 @@ export const EXECPTIONS = {
     code: "1004",
     msg: "请确认确认项目的package.json的'srcModule.dist'配置是否正确",
   },
+  "1005": {
+    code: "1005",
+    msg: "文件夹已存在",
+  },
+  "1006": {
+    code: "1006",
+    msg: "创建子模块发生异常",
+  },
+  "1007": {
+    code: "1007",
+    msg: "选择模板不存在",
+  },
 };
 
 export type EXCEPTION_ENUM = keyof typeof EXECPTIONS;

@@ -30,30 +30,34 @@ export type ModuleItem = {
 export type ModuleDeps = Record<string, Array<string>>;
 export type ModuleMap = Record<string, ModuleItem>;
 
-// // SrcModule规范
-// const pinfo = {
-//   srcModule: {
-//     isRoot: boolean, // 是否是更目录
-//     buildType: "lib"|"web-app", // web-app会注入html, 默认lib
-//     platform: "web"|"node",
-//     dist: { // 表示需要build
-//       ".": "./index.ts",
-//       "./Xxx": "./xx.ts",
-//     },
-//     repo: {
-//       origin: {
-//         remote: "xxx",
-//         modulePath: "./",
-//         vcs: "git",
-//         versions: {
-//           "1.0.0": "67f66bc7069d7",
-//         },
-//       },
-//     },
-//     curentRepo: "origin",
-//     versions: ["1.0.0"],
-//   },
-// };
+/** SrcModule规范
+ const pinfo = {
+  platform: "web" | "node",
+  srcModule: {
+    isRoot: boolean, // 是否是更目录
+    buildType: "lib" || "web-app", // web-app会注入html, 默认lib
+    outputDir: "./dist", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./dist
+    srcDir: "./src", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./src
+    dist: {
+      // 表示需要build
+      ".": "./index.ts",
+      "./Xxx": "./xx.ts",
+    },
+    repo: {
+      origin: {
+        remote: "xxx",
+        modulePath: "./",
+        vcs: "git",
+        versions: {
+          "1.0.0": "67f66bc7069d7",
+        },
+      },
+    },
+    curentRepo: "origin",
+    versions: ["1.0.0"],
+  },
+};
+ */
 
 /**
  * SrcModule信息查询
@@ -246,6 +250,9 @@ const getSrcModuleList = async (
   srcModulesPath: string,
   formatSrc?: (src: string) => string
 ) => {
+  if (!existsSync(srcModulesPath)) {
+    return {};
+  }
   const files = await readdir(srcModulesPath);
   const srcModules: ModuleMap = {};
   for (const f of files) {

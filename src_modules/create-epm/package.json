@@ -3,12 +3,19 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
+  },
+  "bin": {
+    "create-epm": "./dist/index.js"
   },
   "keywords": [],
   "author": "",
   "srcModule": {
+    "dist": {
+      ".": "./index.ts"
+    },
     "repo": {
       "origin": {
         "remote": "xxx",
@@ -19,11 +26,16 @@
         }
       }
     },
-    "build": "./index.ts",
     "curentRepo": "origin",
     "versions": [
       "1.0.0"
     ]
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.33",
+    "inquirer": "^12.5.2",
+    "vitest": "^3.1.1",
+    "yargs": "^17.7.2"
   },
   "license": "ISC"
 }

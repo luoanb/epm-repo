@@ -10387,6 +10387,18 @@ var EXECPTIONS = {
   "1004": {
     code: "1004",
     msg: "\u8BF7\u786E\u8BA4\u786E\u8BA4\u9879\u76EE\u7684package.json\u7684'srcModule.dist'\u914D\u7F6E\u662F\u5426\u6B63\u786E"
+  },
+  "1005": {
+    code: "1005",
+    msg: "\u6587\u4EF6\u5939\u5DF2\u5B58\u5728"
+  },
+  "1006": {
+    code: "1006",
+    msg: "\u521B\u5EFA\u5B50\u6A21\u5757\u53D1\u751F\u5F02\u5E38"
+  },
+  "1007": {
+    code: "1007",
+    msg: "\u9009\u62E9\u6A21\u677F\u4E0D\u5B58\u5728"
   }
 };
 
@@ -10687,6 +10699,9 @@ function getIsSrcModuleByPackageInfo(info) {
   return !!data.srcModule;
 }
 var getSrcModuleList = async (srcModulesPath, formatSrc) => {
+  if (!(0, import_fs.existsSync)(srcModulesPath)) {
+    return {};
+  }
   const files = await (0, import_promises2.readdir)(srcModulesPath);
   const srcModules = {};
   for (const f of files) {
