@@ -10368,38 +10368,17 @@ var esm_default = {
 
 // src_modules/exception/enum.ts
 var EXECPTIONS = {
-  "1000": {
-    code: "1000",
-    msg: "\u8FD9\u4E0D\u662F\u4E00\u4E2A\u6B63\u786E\u7684\u9879\u76EE\u8DEF\u5F84"
-  },
-  "1001": {
-    code: "1001",
-    msg: "\u672A\u627E\u5230\u5BF9\u5E94\u6A21\u5757\uFF0C\u6216\u5BF9\u5E94\u6A21\u5757\u5E76\u975E\u2018\u6E90\u6A21\u5757\u2019"
-  },
-  "1002": {
-    code: "1002",
-    msg: "\u6A21\u5757\u5DF2\u5728src_modules"
-  },
-  "1003": {
-    code: "1003",
-    msg: "\u8BF7\u5148\u8C03\u7528init\u521D\u59CB\u5316\u66F4\u65B0\u6570\u636E\u51FD\u6570"
-  },
-  "1004": {
-    code: "1004",
-    msg: "\u8BF7\u786E\u8BA4\u786E\u8BA4\u9879\u76EE\u7684package.json\u7684'srcModule.dist'\u914D\u7F6E\u662F\u5426\u6B63\u786E"
-  },
-  "1005": {
-    code: "1005",
-    msg: "\u6587\u4EF6\u5939\u5DF2\u5B58\u5728"
-  },
-  "1006": {
-    code: "1006",
-    msg: "\u521B\u5EFA\u5B50\u6A21\u5757\u53D1\u751F\u5F02\u5E38"
-  },
-  "1007": {
-    code: "1007",
-    msg: "\u9009\u62E9\u6A21\u677F\u4E0D\u5B58\u5728"
-  }
+  "1000": "\u8FD9\u4E0D\u662F\u4E00\u4E2A\u6B63\u786E\u7684\u9879\u76EE\u8DEF\u5F84",
+  "1001": "\u672A\u627E\u5230\u5BF9\u5E94\u6A21\u5757\uFF0C\u6216\u5BF9\u5E94\u6A21\u5757\u5E76\u975E\u2018\u6E90\u6A21\u5757\u2019",
+  "1002": "\u6A21\u5757\u5DF2\u5728src_modules",
+  "1003": "\u8BF7\u5148\u8C03\u7528init\u521D\u59CB\u5316\u66F4\u65B0\u6570\u636E\u51FD\u6570",
+  "1004": "\u8BF7\u786E\u8BA4\u9879\u76EE\u7684package.json\u7684'srcModule.dist'\u914D\u7F6E\u662F\u5426\u6B63\u786E",
+  "1005": "\u6587\u4EF6\u5939\u5DF2\u5B58\u5728",
+  "1006": "\u521B\u5EFA\u5B50\u6A21\u5757\u53D1\u751F\u5F02\u5E38",
+  "1007": "\u9009\u62E9\u7684\u6A21\u677F\u4E0D\u5B58\u5728",
+  "1008": "\u6A21\u677F\u76EE\u5F55\u4E0D\u5B58\u5728",
+  "1009": "\u6A21\u677F\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u672A\u627E\u5230\u53EF\u7528\u6A21\u677F",
+  "1010": "\u76EE\u6807\u76EE\u5F55\u5DF2\u5B58\u5728"
 };
 
 // src_modules/exception/Exception.ts
@@ -10411,15 +10390,15 @@ var Exception = class _Exception extends Error {
   /**
    * 抛出异常,需要先定义异常类型
    * @param exception 异常类型
-   * @param options 可选参数 
+   * @param options 可选参数
    */
   static throw(exceptionKey, { contentMsg, error, throwOnce = true } = {}) {
     if (error?.errorCode && throwOnce) {
       throw error;
     }
     const err = EXECPTIONS[exceptionKey];
-    const msg = contentMsg ? `${err.code} ${err.msg}: ${contentMsg}` : `${err.code} ${err.msg}`;
-    throw new _Exception(err.code, msg);
+    const msg = contentMsg ? `${exceptionKey} ${err}: ${contentMsg}` : `${exceptionKey} ${err}`;
+    throw new _Exception(exceptionKey, msg);
   }
 };
 

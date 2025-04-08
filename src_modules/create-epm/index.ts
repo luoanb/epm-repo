@@ -5,6 +5,8 @@ import path from "path";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
 import { Exception } from "exception";
+import { getFileDirPath } from "./pathUtil";
+
 interface CliOptions {
   projectName?: string;
   template?: string;
@@ -12,6 +14,28 @@ interface CliOptions {
 
 async function main() {
   console.log("Welcome to create-epm! 🚀");
+
+  // Path to the templates directory
+  const templatesDir = path.resolve(
+    getFileDirPath(import.meta),
+    "../",
+    "templates"
+  );
+
+  // Check if templates directory exists
+  if (!fs.existsSync(templatesDir)) {
+    return Exception.throw("1008");
+  }
+
+  // Read available templates from the templates directory
+  const availableTemplates = fs.readdirSync(templatesDir).filter((file) => {
+    const filePath = path.join(templatesDir, file);
+    return fs.statSync(filePath).isDirectory();
+  });
+
+  if (availableTemplates.length === 0) {
+    return Exception.throw("1009");
+  }
 
   // Prompt user for arguments
   const { projectName, template } = await inquirer.prompt([
@@ -26,7 +50,7 @@ async function main() {
       name: "template",
       type: "list",
       message: "Choose a template:",
-      choices: ["node", "web"],
+      choices: availableTemplates,
     },
   ]);
 
@@ -36,8 +60,9 @@ async function main() {
 
   // Check if directory already exists
   if (fs.existsSync(targetDir)) {
-    console.error(`Error: Directory "${options.projectName}" already exists.`);
-    process.exit(1);
+    return Exception.throw("1010", {
+      contentMsg: options.projectName,
+    });
   }
 
   // Create project directory
@@ -45,16 +70,15 @@ async function main() {
 
   console.log(`Creating project in ${targetDir}...`);
 
-  // Path to the templates directory
-  const templatesDir = path.resolve(__dirname, "templates", options.template!);
+  const selectedTemplateDir = path.join(templatesDir, options.template!);
 
   // Check if the selected template exists
-  if (!fs.existsSync(templatesDir)) {
+  if (!fs.existsSync(selectedTemplateDir)) {
     return Exception.throw("1007", { contentMsg: options.template });
   }
 
   // Copy template files to the target directory
-  copyDirectory(templatesDir, targetDir);
+  copyDirectory(selectedTemplateDir, targetDir);
 
   console.log("Installing dependencies...");
   try {
