@@ -87,7 +87,10 @@ yargs(hideBin(process.argv))
     describe: "执行终端指令",
     builder: {},
     async handler(argv: Record<string, any>) {
-      Shell.exec(argv._.join(" "));
+      const v: string[] = argv._;
+      const index = v.findIndex((i: string) => i == "shell");
+      const params = v.slice(index + 1);
+      Shell.exec(params.join(" "));
     },
   })
   .command({
@@ -121,6 +124,16 @@ yargs(hideBin(process.argv))
       // @ts-expect-error
       await build(argv);
     },
+  })
+  .fail((msg, err) => {
+    if (err) {
+      // 如果是程序内部错误，直接抛出
+      console.error("Error:", err.message);
+    } else {
+      // 如果是命令解析错误，输出自定义错误信息
+      console.error("Command Error:", msg);
+    }
+    process.exit(1); // 退出程序
   })
   .parserConfiguration({
     "unknown-options-as-args": true, // 将未知选项作为参数收集

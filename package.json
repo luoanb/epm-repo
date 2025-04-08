@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@microsoft/api-extractor": "^7.52.3",
+    "chardet": "^2.1.0",
     "esbuild": "^0.25.2"
   }
 }

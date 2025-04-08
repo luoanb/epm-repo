@@ -1,20 +1,21 @@
 import { exec, execSync } from "child_process";
-import iconv from "iconv-lite"
+import iconv from "iconv-lite";
+import chardet from "chardet";
+
 export interface ShellExecRes {
   /** 执行结果:0:正确执行完, 1:进程执行出错,2:进程被终止,3:进程不存在 */
-  code: 0 | 1 | 2 | 3
+  code: 0 | 1 | 2 | 3;
   /** 提示 */
-  msg?: string
+  msg?: string;
   /** 错误 */
-  err?: any
+  err?: any;
   /** 返回数据 */
-  data?: any
+  data?: any;
 }
 
-const isWindows = process.platform === 'win32';
+const isWindows = process.platform === "win32";
 export class Shell {
-
-  static isWindows = isWindows
+  static isWindows = isWindows;
   /**
    * 判断命令是否存在
    * @param command
@@ -47,35 +48,38 @@ export class Shell {
   }
   /**
    * 执行指令
-   * @param command 
+   * @param command
    */
   static exec(command: string) {
     return new Promise<ShellExecRes>((res) => {
-      const child = exec(command, { encoding: 'buffer' });
-      child.stdout?.on('data', data => {
-        const out = this.isWindows ? iconv.decode(data, "gbk") : data.toString('utf8')
+      const child = exec(command, { encoding: "buffer" });
+      child.stdout?.on("data", (data) => {
+        // 检测编码
+        const encoding = chardet.detect(data) || "utf-8"; // 默认使用 utf-8
+        const out = iconv.decode(data, encoding);
         console.log(`${command.substring(0, 10)}: ${out}`);
-      })
+      });
       // 实时输出标准错误
-      child.stderr?.on('data', (data) => {
-        const out = this.isWindows ? iconv.decode(data, "gbk") : data.toString('utf8')
+      child.stderr?.on("data", (data) => {
+        const encoding = chardet.detect(data) || "utf-8";
+        const out = iconv.decode(data, encoding);
         console.error(`${command.substring(0, 10)}: ${out}`);
       });
-      child.on('error', (err) => {
+      child.on("error", (err) => {
         res({
           code: 3,
-          err
-        })
+          err,
+        });
       });
-      child.on('close', (code, signal) => {
+      child.on("close", (code, signal) => {
         if (code === 0) {
-          res({ code: 0 })
+          res({ code: 0 });
         } else if (code === null) {
-          res({ code: 2, data: { signal } })
+          res({ code: 2, data: { signal } });
         } else {
-          res({ code: 1, data: { code } })
+          res({ code: 1, data: { code } });
         }
       });
-    })
+    });
   }
 }
