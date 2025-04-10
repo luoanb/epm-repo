@@ -5,8 +5,7 @@ import path from "path";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
 import { Exception } from "exception";
-import { getFileDirPath } from "./pathUtil";
-
+import { getFileDirPath } from "module-ctrl/pathUtil";
 interface CliOptions {
   projectName?: string;
   template?: string;

@@ -25,7 +25,7 @@ __export(vcs_exports, {
 module.exports = __toCommonJS(vcs_exports);
 var Test = {
   /**模块测试 */
-  name: "\u4E00\u5207\u4ECE\u6B64\u523B\u5F00\u59CB"
+  name: "--help \u5F00\u542F\u5E2E\u52A9"
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

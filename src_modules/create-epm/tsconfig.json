@@ -20,5 +20,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["."]
+  "include": [
+    ".",
+    "../module-ctrl/pathUtil.test.ts",
+    "../module-ctrl/pathUtil.ts"
+  ]
 }

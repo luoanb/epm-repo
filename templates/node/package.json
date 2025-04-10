@@ -1,0 +1,24 @@
+{
+  "name": "template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "srcModule": {
+    "isRoot": true,
+    "buildType": "lib",
+    "dist": {
+      ".": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "epm-repo": "^0.0.5",
+    "typescript": "^5.8.2"
+  }
+}

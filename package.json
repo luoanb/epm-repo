@@ -31,7 +31,6 @@
     "@types/dts-bundle": "^0.0.35",
     "@types/node": "^22.14.0",
     "@types/yargs": "^17.0.33",
-    "dts-bundle": "^0.7.3",
     "exception": "./src_modules/exception",
     "iconv-lite": "^0.6.3",
     "module-ctrl": "./src_modules/module-ctrl",
@@ -44,6 +43,7 @@
   "dependencies": {
     "@microsoft/api-extractor": "^7.52.3",
     "chardet": "^2.1.0",
-    "esbuild": "^0.25.2"
+    "esbuild": "^0.25.2",
+    "inquirer": "^12.5.2"
   }
 }

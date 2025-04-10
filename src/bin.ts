@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import {
   cpModulesToSrc,
   cpSpecificSrcmodule,
@@ -9,6 +11,8 @@ import { setTsconfigSrcmodule } from "./setTsconfigSrcmodule";
 import { Test } from "vcs";
 import { Shell } from "./utils/Shell";
 import { build } from "./build";
+import { createSubModuleHandler } from "./createSubModule";
+import { createExportFile } from "./createExportFile";
 
 yargs(hideBin(process.argv))
   .command({
@@ -123,6 +127,37 @@ yargs(hideBin(process.argv))
     async handler(argv: Record<string, any>) {
       // @ts-expect-error
       await build(argv);
+    },
+  })
+  .command({
+    command: "createSubModule <projectName>", // 创建子模块
+    describe: "创建子模块",
+    aliases: ["csm"],
+    async handler(argv: Record<string, any>) {
+      if (!argv.projectName) {
+        console.error("项目名称不能为空！");
+        return;
+      }
+      await createSubModuleHandler(argv);
+    },
+  })
+  .command({
+    command: "createExportFile <filetName>", // 创建子模块
+    describe: "创建可导出文件",
+    aliases: ["cf"],
+    builder: {
+      dist: {
+        describe: "是否Build",
+        type: "boolean",
+        default: false,
+      },
+    },
+    async handler(argv: Record<string, any>) {
+      if (!argv.filetName) {
+        console.error("文件名称不能为空！");
+        return;
+      }
+      await createExportFile(argv.filetName, argv.dist);
     },
   })
   .fail((msg, err) => {
