@@ -1,6 +1,6 @@
 {
   "name": "epm-repo",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "test": "vitest",
     "prebuild": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor",

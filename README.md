@@ -44,26 +44,28 @@ Es Module Publish Cli
 
 # 指令
 
-| 指令          | 作用           | 备注                                                                                                 |
-| ------------- | -------------- | ---------------------------------------------------------------------------------------------------- |
-| init          | 初始化项目     |                                                                                                      |
-| updateInfo    | 更新项目信息   |                                                                                                      |
-| creat         | 创建一个子模块 | 可选执行平台创建不同平台的项目                                                                       |
-| creat-project | 创建项目       | 可能以 create-epm 项目形式提供                                                                       |
-| change-repo   | 变更源码地址   |                                                                                                      |
-| status        | 获取仓库状态   |                                                                                                      |
-| publish       | 发布仓库       | 可以大中小三个版本递增发布，可指定版本发布                                                           |
-| rename        | 重命名         | 定制发布开源且三方源码必备                                                                           |
-| build         | 制品打包       | 它应该提供主流的打包支持，且底层唯一，即只要是 epm，相互直接是可以随便复用的，除非执行平台存在不一致 |
+```
+Commands:
+  bin.cjs init                           初始化：解析源模块并更新依赖关系
+  bin.cjs cp                             复制源码库到src_modules
+  bin.cjs updateInfo                     更新src_modules依赖信息
+  bin.cjs updateTsconfig                 更新src_modules模块的导入别名
+  bin.cjs shell                          执行终端指令
+  bin.cjs build                          打包
+  bin.cjs createSubModule <projectName>  创建子模块               [aliases: csm]
+  bin.cjs createExportFile <filetName>   创建可导出文件            [aliases: cf]
+```
 
 ## 执行平台
 
-1. Web
-2. Node
-3. 小程序
-4. 快应用
-5. 跨端 App
-6. ES 通用
+| 平台     | 完成情况 |
+| -------- | -------- |
+| Web      | ✓        |
+| Node     | ✓        |
+| 小程序   | x        |
+| 快应用   | x        |
+| 跨端 App | x        |
+| ES 通用  | x        |
 
 ## 内与外
 
@@ -71,7 +73,6 @@ Es Module Publish Cli
 
 - 仅支持 pnpm（个人业余精力有限，无力做大而全的项目）
 - 仅支持 typescript
-- rebuild.config.ts 应该内置，不由使用者主动定义（目前需要抛出初步内容仅包含 source 配置）
 - tsconfig.json 能否内置
 
   - 对打包的影响(打包可以在打包指令里定制 tsconfig)
@@ -84,4 +85,4 @@ Es Module Publish Cli
 
 # 底层技术
 
-项目底层基于 Rebuild
+项目底层基于 esbuild
