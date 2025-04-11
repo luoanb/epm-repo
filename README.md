@@ -4,29 +4,36 @@ Es Module Publish Cli
 
 提供一个新的资源分发思路：我们不再对打包的制品进行分发，而是直接分发源码。仅在最后制成具体 App 时才进行最后的打包。
 
-`npx esbuild src/build/bundle/index.ts --outfile=build.js --bundle --platform=node --external:esbuild`
-
 # 模块规范
 
 ```json
 // package.json
 {
+  "platform": "node", // "web" | "node" 平台类型，可选值为 "web" 或 "node"
   "srcModule": {
+    "isRoot": true, // 是否是根目录，布尔值
+    "buildType": false, //  false | "lib" | "web-app" 构建类型，"web-app" 会注入 HTML，默认值为 false（不需要打包）,目前仅支持'web'|false
+    "outputDir": "./dist", // 默认输出路径，用于指定创建导出文件时的默认配置，默认值为 "./dist"
+    "srcDir": "./src", // 源代码目录路径，用于指定创建导出文件时的默认配置，默认值为 "./src"
+    "dist": {
+      ".": "./index.ts", // 主入口文件路径
+      "./Xxx": "./xx.ts" // 其他导出文件路径
+    },
+    // 未实现, 源码仓库和版本管理
     "repo": {
       "origin": {
-        "remote": "xxx",
-        "modulePath": "./",
-        "vcs": "git",
+        "remote": "xxx", // 远程仓库地址
+        "modulePath": "./", // 模块路径
+        "vcs": "git", // 版本控制系统类型
         "versions": {
-          "1.0.0": "67f66bc7069d7",
-        },
-      },
+          "1.0.0": "67f66bc7069d7" // 版本号与对应的提交哈希值
+        }
+      }
     },
-    "build":true,
-    "curentRepo": "origin",
-    "versions": ["1.0.0"],
-  },
-};
+    "curentRepo": "origin", // 当前使用的仓库名称
+    "versions": ["1.0.0"] // 可用的版本列表
+  }
+}
 ```
 
 # 新特性
@@ -45,15 +52,17 @@ Es Module Publish Cli
 # 指令
 
 ```
+
 Commands:
-  bin.cjs init                           初始化：解析源模块并更新依赖关系
-  bin.cjs cp                             复制源码库到src_modules
-  bin.cjs updateInfo                     更新src_modules依赖信息
-  bin.cjs updateTsconfig                 更新src_modules模块的导入别名
-  bin.cjs shell                          执行终端指令
-  bin.cjs build                          打包
-  bin.cjs createSubModule <projectName>  创建子模块               [aliases: csm]
-  bin.cjs createExportFile <filetName>   创建可导出文件            [aliases: cf]
+bin.cjs init 初始化：解析源模块并更新依赖关系
+bin.cjs cp 复制源码库到 src_modules
+bin.cjs updateInfo 更新 src_modules 依赖信息
+bin.cjs updateTsconfig 更新 src_modules 模块的导入别名
+bin.cjs shell 执行终端指令
+bin.cjs build 打包
+bin.cjs createSubModule <projectName> 创建子模块 [aliases: csm]
+bin.cjs createExportFile <filetName> 创建可导出文件 [aliases: cf]
+
 ```
 
 ## 执行平台
@@ -66,6 +75,18 @@ Commands:
 | 快应用   | x        |
 | 跨端 App | x        |
 | ES 通用  | x        |
+
+## 源码格式支持
+
+| 文件格式 | 完成情况 |
+| -------- | -------- |
+| TS       | ✓        |
+| TSX      | x        |
+| CSS      | x        |
+| SVG      | x        |
+| HTML     | x        |
+| VUE      | x        |
+| file     | x        |
 
 ## 内与外
 

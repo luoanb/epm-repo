@@ -145,19 +145,12 @@ yargs(hideBin(process.argv))
     command: "createExportFile <filetName>", // 创建子模块
     describe: "创建可导出文件",
     aliases: ["cf"],
-    builder: {
-      dist: {
-        describe: "是否Build",
-        type: "boolean",
-        default: false,
-      },
-    },
     async handler(argv: Record<string, any>) {
       if (!argv.filetName) {
         console.error("文件名称不能为空！");
         return;
       }
-      await createExportFile(argv.filetName, argv.dist);
+      await createExportFile(argv.filetName);
     },
   })
   .fail((msg, err) => {

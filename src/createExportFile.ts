@@ -8,13 +8,10 @@ import { promises as fs } from "fs";
 import path from "path";
 import { Exception } from "exception";
 
-export async function createExportFile(
-  fileName: string,
-  dist: boolean = false
-): Promise<void> {
+export async function createExportFile(fileName: string): Promise<void> {
   const rootDir = getRootDirname();
   const packageJson = await SrcModuleInfo.readPackageInfo(rootDir);
-
+  const dist = SrcModuleInfo.isNeedBuild(packageJson);
   if (!packageJson) {
     Exception.throw("1000", { contentMsg: rootDir });
   }

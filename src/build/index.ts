@@ -99,21 +99,19 @@ export const build = async (option: BuildOptions) => {
       fillEntryByModuleItem(it);
     }
   }
-  console.log("webEntry", webEntry);
-  console.log("nodeEntry", nodeEntry);
-  console.log("dtsEntry", dtsEntry);
-
   await buildOnePlatForm({
     entryPoints: webEntry,
     platform: "browser",
     format: "esm",
     outdir: "./",
+    watch: option.watch,
   });
   await buildOnePlatForm({
     entryPoints: nodeEntry,
     platform: "node",
     format: "cjs",
     outdir: "./",
+    watch: option.watch,
   });
 
   // 仅build模式生成d.th

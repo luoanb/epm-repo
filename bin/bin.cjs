@@ -35704,12 +35704,20 @@ var SrcModuleInfo = class _SrcModuleInfo {
     return true;
   };
   /**
+   * 是否需要build
+   * @param pkgInfo
+   * @returns
+   */
+  static isNeedBuild = (pkgInfo) => {
+    return pkgInfo && pkgInfo.srcModule?.buildType && pkgInfo.srcModule?.dist;
+  };
+  /**
    * 通过pkgInfo 获取模块打包信息
    * @param pkgInfo
    * @returns
    */
   static getBuildConfigByPkgInfo(pkgInfo) {
-    if (!pkgInfo.srcModule?.dist) {
+    if (!this.isNeedBuild(pkgInfo)) {
       return [];
     }
     const index = {
@@ -37805,20 +37813,19 @@ var build = async (option) => {
       fillEntryByModuleItem(it);
     }
   }
-  console.log("webEntry", webEntry);
-  console.log("nodeEntry", nodeEntry);
-  console.log("dtsEntry", dtsEntry);
   await buildOnePlatForm({
     entryPoints: webEntry,
     platform: "browser",
     format: "esm",
-    outdir: "./"
+    outdir: "./",
+    watch: option.watch
   });
   await buildOnePlatForm({
     entryPoints: nodeEntry,
     platform: "node",
     format: "cjs",
-    outdir: "./"
+    outdir: "./",
+    watch: option.watch
   });
   if (!option.watch || option.dts) {
     console.log("d.ts\u58F0\u660E\u751F\u6210\u4E2D");
@@ -40310,9 +40317,10 @@ Next steps:
 // src/createExportFile.ts
 var import_fs9 = require("fs");
 var import_path15 = __toESM(require("path"));
-async function createExportFile(fileName, dist = false) {
+async function createExportFile(fileName) {
   const rootDir = getRootDirname();
   const packageJson = await SrcModuleInfo.readPackageInfo(rootDir);
+  const dist = SrcModuleInfo.isNeedBuild(packageJson);
   if (!packageJson) {
     Exception.throw("1000", { contentMsg: rootDir });
   }
@@ -40473,19 +40481,12 @@ yargs_default(hideBin(process.argv)).command({
   // 创建子模块
   describe: "\u521B\u5EFA\u53EF\u5BFC\u51FA\u6587\u4EF6",
   aliases: ["cf"],
-  builder: {
-    dist: {
-      describe: "\u662F\u5426Build",
-      type: "boolean",
-      default: false
-    }
-  },
   async handler(argv) {
     if (!argv.filetName) {
       console.error("\u6587\u4EF6\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A\uFF01");
       return;
     }
-    await createExportFile(argv.filetName, argv.dist);
+    await createExportFile(argv.filetName);
   }
 }).fail((msg, err) => {
   if (err) {

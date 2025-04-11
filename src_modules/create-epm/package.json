@@ -13,6 +13,7 @@
   "keywords": [],
   "author": "",
   "srcModule": {
+    "buildType": "lib",
     "dist": {
       ".": "./index.ts"
     },

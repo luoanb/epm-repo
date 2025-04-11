@@ -35,11 +35,10 @@ export type ModuleMap = Record<string, ModuleItem>;
   platform: "web" | "node",
   srcModule: {
     isRoot: boolean, // 是否是更目录
-    buildType: "lib" || "web-app", // web-app会注入html, 默认lib
+    buildType: false||"lib" | "web-app", // web-app会注入html, 默认false (不需要打包)
     outputDir: "./dist", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./dist
     srcDir: "./src", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./src
     dist: {
-      // 表示需要build
       ".": "./index.ts",
       "./Xxx": "./xx.ts",
     },
@@ -166,12 +165,21 @@ export class SrcModuleInfo {
   };
 
   /**
+   * 是否需要build
+   * @param pkgInfo
+   * @returns
+   */
+  static isNeedBuild = (pkgInfo: false | Record<string, any>) => {
+    return pkgInfo && pkgInfo.srcModule?.buildType && pkgInfo.srcModule?.dist;
+  };
+
+  /**
    * 通过pkgInfo 获取模块打包信息
    * @param pkgInfo
    * @returns
    */
   static getBuildConfigByPkgInfo(pkgInfo: Record<string, any>) {
-    if (!pkgInfo.srcModule?.dist) {
+    if (!this.isNeedBuild(pkgInfo)) {
       return [];
     }
     const index = {
