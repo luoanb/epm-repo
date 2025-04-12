@@ -4,6 +4,7 @@
   "platform": "node",
   "main": "index.ts",
   "module": "index.ts",
+  "types": "index.d.ts",
   "srcModule": {
     "curentRepo": "origin",
     "repo": {

@@ -7,6 +7,7 @@ Es Module Publish Cli
 # 模块规范
 
 ```json
+// SrcModule规范
 // package.json
 {
   "platform": "node", // "web" | "node" 平台类型，可选值为 "web" 或 "node"

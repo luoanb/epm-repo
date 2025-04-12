@@ -5,6 +5,7 @@ import path from "path";
 import { Exception } from "exception";
 import { loadConfig } from "../utils/loadConfig";
 import { WebAppHtmlPlugin } from "../build/bundle/WebAppHtmlPlugin";
+import { getSrcmoduleTsconfigPaths } from "../setTsconfigSrcmodule";
 
 export interface BuildOptions {
   watch: boolean;
@@ -54,7 +55,8 @@ export const build = async (option: BuildOptions) => {
   function fillEntryByModuleItem(it: ModuleItem) {
     SrcModuleInfo.getBuildConfigByPkgInfo(it.packageInfo).forEach(
       (entryInfo) => {
-        // 非lib不打包dts
+        // 所有的dts都需要打包（isNeedBuild）
+        // 非lib不打包dts（buildType）
         if (it.packageInfo.srcModule?.buildType != "web-app") {
           dtsEntry.push({
             in: windowsPathToLinuxPath(
@@ -63,6 +65,10 @@ export const build = async (option: BuildOptions) => {
             ),
             out: getOutName(it, entryInfo, "ts"),
           });
+        }
+        // 源码库无需打包
+        if (!SrcModuleInfo.isNeedBuild(it.packageInfo)) {
+          return;
         }
         if (it.packageInfo.platform == "web") {
           if (it.packageInfo.srcModule?.buildType == "web-app") {
@@ -171,16 +177,51 @@ export const build = async (option: BuildOptions) => {
   // 仅显示设置需要dts才生成dts(dts太耗时了)
   if (option.dts) {
     console.log("d.ts声明生成中");
-    // await dts({mainEntryPointFilePath:dts})
+    // // await dts({mainEntryPointFilePath:dts})
+    // const paths = await getSrcmoduleTsconfigPaths("./", "dts");
+
+    const rootEntry: any[] = [];
+    const otherEntry = dtsEntry.filter((item) => {
+      if (item.in.indexOf("src_modules") == -1) {
+        rootEntry.push(item);
+        return false;
+      }
+      return true;
+    });
+
     await Promise.all(
-      dtsEntry.map((file) =>
+      otherEntry.map((file) =>
         dts({
           projectPath: "./",
           mainEntryPointFilePath: file.in,
+          bundledPackages: [...Object.keys(moduleList)], //未打包的dts需要提前打包
           dtsRollup: {
             enabled: true,
             untrimmedFilePath: file.out,
           },
+          // overrideTsconfig: {
+          //   compilerOptions: {
+          //     paths: paths,
+          //   },
+          // },
+        })
+      )
+    );
+    await Promise.all(
+      rootEntry.map((file) =>
+        dts({
+          projectPath: "./",
+          mainEntryPointFilePath: file.in,
+          bundledPackages: [...Object.keys(moduleList)], //未打包的dts需要提前打包
+          dtsRollup: {
+            enabled: true,
+            untrimmedFilePath: file.out,
+          },
+          // overrideTsconfig: {
+          //   compilerOptions: {
+          //     paths: paths,
+          //   },
+          // },
         })
       )
     );

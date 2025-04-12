@@ -30,36 +30,38 @@ export type ModuleItem = {
 export type ModuleDeps = Record<string, Array<string>>;
 export type ModuleMap = Record<string, ModuleItem>;
 
-/** SrcModule规范
- const pinfo = {
-  platform: "web" | "node",
-  srcModule: {
-    isRoot: boolean, // 是否是更目录
-    buildType: false||"lib" | "web-app", // web-app会注入html, 默认false (不需要打包)
-    outputDir: "./dist", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./dist，web-app使用路径
-    srcDir: "./src", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./src
-    dist: {
-      ".": "./index.ts",
-      "./Xxx": "./xx.ts",
-    },
-    repo: {
-      origin: {
-        remote: "xxx",
-        modulePath: "./",
-        vcs: "git",
-        versions: {
-          "1.0.0": "67f66bc7069d7",
-        },
-      },
-    },
-    curentRepo: "origin",
-    versions: ["1.0.0"],
-  },
-};
- */
-
 /**
  * SrcModule信息查询
+ * ```json
+// SrcModule规范
+// package.json
+{
+  "platform": "node", // "web" | "node" 平台类型，可选值为 "web" 或 "node"
+  "srcModule": {
+    "isRoot": true, // 是否是根目录，布尔值
+    "buildType": false, //  false | "lib" | "web-app" 构建类型，"web-app" 会注入 HTML，默认值为 false（不需要打包）,目前仅支持'web'|false
+    "outputDir": "./dist", // 默认输出路径，用于指定创建导出文件时的默认配置，默认值为 "./dist"
+    "srcDir": "./src", // 源代码目录路径，用于指定创建导出文件时的默认配置，默认值为 "./src"
+    "dist": {
+      ".": "./index.ts", // 主入口文件路径
+      "./Xxx": "./xx.ts" // 其他导出文件路径
+    },
+    // 未实现, 源码仓库和版本管理
+    "repo": {
+      "origin": {
+        "remote": "xxx", // 远程仓库地址
+        "modulePath": "./", // 模块路径
+        "vcs": "git", // 版本控制系统类型
+        "versions": {
+          "1.0.0": "67f66bc7069d7" // 版本号与对应的提交哈希值
+        }
+      }
+    },
+    "curentRepo": "origin", // 当前使用的仓库名称
+    "versions": ["1.0.0"] // 可用的版本列表
+  }
+}
+```
  */
 export class SrcModuleInfo {
   static SRC_MODULES = "src_modules";
@@ -192,20 +194,29 @@ export class SrcModuleInfo {
   };
 
   /**
+   * 获取模块主Src路径
+   * @param pkgInfo
+   * @returns
+   */
+  static getMainSrc = (pkgInfo: Record<string, any>) => {
+    return pkgInfo.srcModule.dist?.["."] || pkgInfo.main || pkgInfo.module;
+  };
+
+  /**
    * 通过pkgInfo 获取模块打包信息
    * @param pkgInfo
    * @returns
    */
   static getBuildConfigByPkgInfo(pkgInfo: Record<string, any>) {
-    if (!this.isNeedBuild(pkgInfo)) {
-      return [];
-    }
+    // if (!this.isNeedBuild(pkgInfo)) {
+    //   return [];
+    // }
     const index = {
       input: {
         name: "cuurent",
         key: ".",
-        src: pkgInfo.srcModule.dist["."],
-      }, // 输入路径：例如 './index.ts'
+        src: this.getMainSrc(pkgInfo), // 输入路径：例如 './index.ts'
+      },
       output: {
         import:
           pkgInfo.module || path.join(this.getOutputDir(pkgInfo), "index.mjs"),
@@ -215,7 +226,7 @@ export class SrcModuleInfo {
           pkgInfo.types || path.join(this.getOutputDir(pkgInfo), "index.d.ts"),
       },
     };
-    const ohter = Object.keys(pkgInfo.srcModule.dist)
+    const ohter = Object.keys(pkgInfo.srcModule.dist || {})
       .filter((key) => key !== ".")
       .map((key) => {
         const src: string = pkgInfo.srcModule.dist[key];
@@ -326,6 +337,9 @@ const getDependenciesStatus = async (
   srcModulesPath: string,
   moduleList: ModuleMap
 ) => {
+  if (!existsSync(srcModulesPath)) {
+    return {};
+  }
   const files = await readdir(srcModulesPath);
   const moduleDeps: ModuleDeps = {};
   for (const f of files) {

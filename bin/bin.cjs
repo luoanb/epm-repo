@@ -35728,28 +35728,33 @@ var SrcModuleInfo = class _SrcModuleInfo {
     return pkgInfo.srcModule?.srcDir || "./src";
   };
   /**
+   * 获取模块主Src路径
+   * @param pkgInfo
+   * @returns
+   */
+  static getMainSrc = (pkgInfo) => {
+    return pkgInfo.srcModule.dist?.["."] || pkgInfo.main || pkgInfo.module;
+  };
+  /**
    * 通过pkgInfo 获取模块打包信息
    * @param pkgInfo
    * @returns
    */
   static getBuildConfigByPkgInfo(pkgInfo) {
-    if (!this.isNeedBuild(pkgInfo)) {
-      return [];
-    }
     const index = {
       input: {
         name: "cuurent",
         key: ".",
-        src: pkgInfo.srcModule.dist["."]
+        src: this.getMainSrc(pkgInfo)
+        // 输入路径：例如 './index.ts'
       },
-      // 输入路径：例如 './index.ts'
       output: {
         import: pkgInfo.module || import_path2.default.join(this.getOutputDir(pkgInfo), "index.mjs"),
         require: pkgInfo.main || import_path2.default.join(this.getOutputDir(pkgInfo), "index.js"),
         types: pkgInfo.types || import_path2.default.join(this.getOutputDir(pkgInfo), "index.d.ts")
       }
     };
-    const ohter = Object.keys(pkgInfo.srcModule.dist).filter((key) => key !== ".").map((key) => {
+    const ohter = Object.keys(pkgInfo.srcModule.dist || {}).filter((key) => key !== ".").map((key) => {
       const src = pkgInfo.srcModule.dist[key];
       const srcName = import_path2.default.basename(src).replace(import_path2.default.extname(src), "");
       const input = {
@@ -35824,6 +35829,9 @@ function getDependencieByPackageInfo(moduleDeps, packInfo, srcModules) {
   return moduleDeps;
 }
 var getDependenciesStatus = async (srcModulesPath, moduleList) => {
+  if (!(0, import_fs.existsSync)(srcModulesPath)) {
+    return {};
+  }
   const files = await (0, import_promises2.readdir)(srcModulesPath);
   const moduleDeps = {};
   for (const f of files) {
@@ -37508,21 +37516,29 @@ var wirteJsonFile = async (filePath, data, indent = 0) => {
 };
 
 // src/setTsconfigSrcmodule.ts
-var setTsconfigSrcmodule = async (projectPath) => {
-  const filePath = import_path9.default.join(projectPath, "./tsconfig.srcmodule.json");
-  let tsconfig = await readJsonFile(filePath);
-  const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo("./");
+var getSrcmoduleTsconfigPaths = async (projectPath, type = "src") => {
+  const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo(
+    projectPath
+  );
   const paths = {};
   for (const key of Object.keys(moduleMap)) {
     const it = moduleMap[key];
     SrcModuleInfo.getBuildConfigByPkgInfo(it.packageInfo).forEach(
       (entryInfo) => {
-        paths[`${windowsPathToLinuxPath(import_path9.default.join(it.name, entryInfo.input.key))}`] = [
-          windowsPathToLinuxPath(import_path9.default.join(it.src, entryInfo.input.src), true)
-        ];
+        const out = type == "src" ? entryInfo.input.src : entryInfo.output.types;
+        const basename2 = import_path9.default.basename(out);
+        paths[`${windowsPathToLinuxPath(import_path9.default.join(it.name, entryInfo.input.key))}`] = [windowsPathToLinuxPath(import_path9.default.join(it.src, out, basename2), true)];
       }
     );
   }
+  return paths;
+};
+var setTsconfigSrcmodule = async (projectPath) => {
+  const filePath = import_path9.default.join(projectPath, "./tsconfig.srcmodule.json");
+  let tsconfig = await readJsonFile(filePath);
+  const paths = await getSrcmoduleTsconfigPaths(
+    projectPath
+  );
   if (!tsconfig) {
     tsconfig = { compilerOptions: { paths } };
   } else if (!tsconfig.compilerOptions) {
@@ -37723,6 +37739,7 @@ var dts = async ({
   mainEntryPointFilePath,
   showVerboseMessages,
   projectFolder,
+  overrideTsconfig,
   ...options
 }) => {
   const packageJson = await SrcModuleInfo.readPackageInfo(projectPath);
@@ -37753,11 +37770,7 @@ var dts = async ({
       mainEntryPointFilePath: aburl,
       compiler: {
         tsconfigFilePath: import_path12.default.join(root, projectPath, "./tsconfig.json"),
-        overrideTsconfig: {
-          compilerOptions: {
-            outDir
-          }
-        }
+        overrideTsconfig
       }
     },
     configObjectFullPath: void 0,
@@ -37856,6 +37869,9 @@ var build2 = async (option) => {
             out: getOutName(it, entryInfo, "ts")
           });
         }
+        if (!SrcModuleInfo.isNeedBuild(it.packageInfo)) {
+          return;
+        }
         if (it.packageInfo.platform == "web") {
           if (it.packageInfo.srcModule?.buildType == "web-app") {
             htmlEntry.push({
@@ -37950,15 +37966,49 @@ var build2 = async (option) => {
   ]);
   if (option.dts) {
     console.log("d.ts\u58F0\u660E\u751F\u6210\u4E2D");
+    const rootEntry = [];
+    const otherEntry = dtsEntry.filter((item) => {
+      if (item.in.indexOf("src_modules") == -1) {
+        rootEntry.push(item);
+        return false;
+      }
+      return true;
+    });
     await Promise.all(
-      dtsEntry.map(
+      otherEntry.map(
         (file) => dts({
           projectPath: "./",
           mainEntryPointFilePath: file.in,
+          bundledPackages: [...Object.keys(moduleList)],
+          //未打包的dts需要提前打包
           dtsRollup: {
             enabled: true,
             untrimmedFilePath: file.out
           }
+          // overrideTsconfig: {
+          //   compilerOptions: {
+          //     paths: paths,
+          //   },
+          // },
+        })
+      )
+    );
+    await Promise.all(
+      rootEntry.map(
+        (file) => dts({
+          projectPath: "./",
+          mainEntryPointFilePath: file.in,
+          bundledPackages: [...Object.keys(moduleList)],
+          //未打包的dts需要提前打包
+          dtsRollup: {
+            enabled: true,
+            untrimmedFilePath: file.out
+          }
+          // overrideTsconfig: {
+          //   compilerOptions: {
+          //     paths: paths,
+          //   },
+          // },
         })
       )
     );

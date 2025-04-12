@@ -5,7 +5,7 @@
   "main": "index.js",
   "module": "index.mjs",
   "types": "index.d.ts",
-  "platform":"web",
+  "platform": "web",
   "exports": {
     "./test": {
       "import": "./test.mjs",
