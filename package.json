@@ -1,9 +1,9 @@
 {
   "name": "epm-repo",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "scripts": {
     "test": "vitest",
-    "prebuild": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor",
+    "prebuild": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor --external:@craftamap/esbuild-plugin-html",
     "build": "node dist/bin.js build",
     "dev": "node dist/bin.js build --watch"
   },
@@ -12,6 +12,7 @@
   "bin": {
     "epm": "./bin/bin.cjs"
   },
+  "sideEffects": false,
   "exports": {
     "./bin": {
       "import": "./bin/bin.js",
@@ -41,6 +42,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
+    "@craftamap/esbuild-plugin-html": "^0.9.0",
     "@microsoft/api-extractor": "^7.52.3",
     "chardet": "^2.1.0",
     "esbuild": "^0.25.2",

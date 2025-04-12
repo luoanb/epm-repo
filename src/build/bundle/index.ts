@@ -1,34 +1,41 @@
-import * as esbuild from "esbuild"
-import { bundleConfig } from "./config"
+import * as esbuild from "esbuild";
+import { bundleConfig } from "./config";
 
 export interface BuildOnePlatFormOptions extends esbuild.BuildOptions {
   /** 是否时可执行脚本 */
-  isBin?: boolean
-  watch?: boolean
-  serve?: boolean
-  custom?: boolean
+  isBin?: boolean;
+  watch?: boolean;
+  serve?: boolean;
+  custom?: boolean;
 }
-export async function buildOnePlatForm({ isBin, banner, watch, serve, custom, ...options }: BuildOnePlatFormOptions) {
+export async function buildOnePlatForm({
+  isBin,
+  banner,
+  watch,
+  serve,
+  custom,
+  ...options
+}: BuildOnePlatFormOptions) {
   const ctx = await esbuild.context({
     ...bundleConfig,
     banner: {
       ...banner,
-      js: isBin ? `#!/usr/bin/env node` : banner?.js || '',
+      js: isBin ? `#!/usr/bin/env node` : banner?.js || "",
     },
-    ...options
-  })
+    ...options,
+    plugins: [...(bundleConfig.plugins || []), ...(options.plugins || [])],
+  });
   if (watch) {
-    ctx.watch()
-    return ctx
+    ctx.watch();
+    return ctx;
   } else if (serve) {
-    ctx.serve()
-    return ctx
+    ctx.serve();
+    return ctx;
   } else if (custom) {
-    return ctx
+    return ctx;
   } else {
-    await ctx.rebuild()
-    ctx.dispose()
-    return ctx
+    await ctx.rebuild();
+    ctx.dispose();
+    return ctx;
   }
 }
-

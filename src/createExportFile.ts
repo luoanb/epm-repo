@@ -18,8 +18,8 @@ export async function createExportFile(fileName: string): Promise<void> {
 
   // 确保 packageJson.srcModule 存在
   packageJson.srcModule = packageJson.srcModule || {};
-  const srcDir = packageJson.srcModule.srcDir || "src";
-  const outputDir = packageJson.srcModule.outputDir || "dist";
+  const srcDir = SrcModuleInfo.getSrcDir(packageJson);
+  const outputDir = SrcModuleInfo.getOutputDir(packageJson);
 
   // 使用 path 拼接路径
   const filePath = path.join(rootDir, srcDir, `${fileName}.ts`);

@@ -2,12 +2,10 @@
   "name": "template",
   "version": "1.0.0",
   "description": "",
-  "platform": "node",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "platform": "web",
   "srcModule": {
     "isRoot": true,
-    "buildType": "lib",
+    "buildType": "web-app",
     "dist": {
       ".": "./src/index.ts"
     }
@@ -15,7 +13,8 @@
   "scripts": {
     "build": "npx epm build",
     "dev": "npx epm build --watch",
-    "build:dts": "npx epm build --dts"
+    "build:dts": "npx epm build --dts",
+    "serve": "npx epm serve"
   },
   "keywords": [],
   "author": "",

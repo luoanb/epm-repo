@@ -1,5 +1,5 @@
 import { buildOnePlatForm } from ".";
-import { test } from "vitest"
+import { test } from "vitest";
 
 test("js build base", async () => {
   await buildOnePlatForm({
@@ -9,9 +9,9 @@ test("js build base", async () => {
     outdir: "./",
     entryPoints: [
       {
-        in: './src/test1.ts',
-        out: './dist/test1.js',
-      }
-    ]
-  })
-})
+        in: "./src/test1.ts",
+        out: "./dist/test1.js",
+      },
+    ],
+  });
+});

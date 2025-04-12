@@ -36,7 +36,7 @@ export type ModuleMap = Record<string, ModuleItem>;
   srcModule: {
     isRoot: boolean, // 是否是更目录
     buildType: false||"lib" | "web-app", // web-app会注入html, 默认false (不需要打包)
-    outputDir: "./dist", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./dist
+    outputDir: "./dist", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./dist，web-app使用路径
     srcDir: "./src", // 默认输出路径（用于指定创建导出文件时的默认配置）默认 ./src
     dist: {
       ".": "./index.ts",
@@ -174,6 +174,24 @@ export class SrcModuleInfo {
   };
 
   /**
+   * 获取输出路径
+   * @param pkgInfo
+   * @returns
+   */
+  static getOutputDir = (pkgInfo: Record<string, any>) => {
+    return pkgInfo.srcModule?.outputDir || "./dist";
+  };
+
+  /**
+   * 获取Src路径
+   * @param pkgInfo
+   * @returns
+   */
+  static getSrcDir = (pkgInfo: Record<string, any>) => {
+    return pkgInfo.srcModule?.srcDir || "./src";
+  };
+
+  /**
    * 通过pkgInfo 获取模块打包信息
    * @param pkgInfo
    * @returns
@@ -189,27 +207,30 @@ export class SrcModuleInfo {
         src: pkgInfo.srcModule.dist["."],
       }, // 输入路径：例如 './index.ts'
       output: {
-        import: pkgInfo.module,
-        require: pkgInfo.main,
-        types: pkgInfo.types,
+        import:
+          pkgInfo.module || path.join(this.getOutputDir(pkgInfo), "index.mjs"),
+        require:
+          pkgInfo.main || path.join(this.getOutputDir(pkgInfo), "index.js"),
+        types:
+          pkgInfo.types || path.join(this.getOutputDir(pkgInfo), "index.d.ts"),
       },
     };
     const ohter = Object.keys(pkgInfo.srcModule.dist)
       .filter((key) => key !== ".")
       .map((key) => {
         const src: string = pkgInfo.srcModule.dist[key];
-        const srcName = src.replace(path.extname(src), "");
+        const srcName = path.basename(src).replace(path.extname(src), "");
         const input = {
           name: encodeURIComponent(key),
           key,
           src,
         };
+        const outName = path.join(this.getOutputDir(pkgInfo), srcName);
         const output = pkgInfo.exports?.[key] || {
-          import: srcName + ".js",
-          require: srcName + ".cjs",
-          types: srcName + ".d.ts",
+          import: outName + ".js",
+          require: outName + ".cjs",
+          types: outName + ".d.ts",
         };
-
         return {
           input,
           output,

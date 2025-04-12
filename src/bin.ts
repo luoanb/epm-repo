@@ -119,7 +119,13 @@ yargs(hideBin(process.argv))
         default: false,
       },
       dts: {
-        describe: "是否强制打包d.ts声明文明(监听模式默认不生成d.ts)",
+        describe: "是否强制打包d.ts声明文明(默认不生成d.ts)",
+        type: "boolean",
+        default: false,
+      },
+      serve: {
+        describe:
+          "是否开启服务器，默认不开启（优先级低于--watch），开启后会自动监听文件变化并重新打包",
         type: "boolean",
         default: false,
       },
