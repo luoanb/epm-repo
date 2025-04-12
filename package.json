@@ -1,14 +1,14 @@
 {
   "name": "epm-repo",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "scripts": {
     "test": "vitest",
     "prebuild": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor --external:@craftamap/esbuild-plugin-html",
     "build": "node dist/bin.js build",
     "dev": "node dist/bin.js build --watch"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "epm": "./bin/bin.cjs"
   },
