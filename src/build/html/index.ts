@@ -43,8 +43,10 @@ const resourceSelectors: ResourceSelector[] = [
   { selector: "object[data]", attr: "data", type: "object" }, // 对象
 ];
 
-export async function HtmlBuild(options: HtmlBuildOptions) {
-  const htmlPath = options.path;
+export async function HtmlBuild({
+  path: htmlPath,
+  ...options
+}: HtmlBuildOptions) {
   const content = await fs.readFile(htmlPath, "utf8");
   const $ = load(content);
 
@@ -62,8 +64,9 @@ export async function HtmlBuild(options: HtmlBuildOptions) {
   });
 
   console.log("Collected resources by type:", resources);
-  buildOnePlatForm({
+  const res = await buildOnePlatForm({
     ...options,
     entryPoints: resources["script"],
   });
+  console.log(res, "build success");
 }

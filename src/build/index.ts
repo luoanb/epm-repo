@@ -195,10 +195,10 @@ export const build = async (option: BuildOptions) => {
 
   allPromise.push(
     ...htmlEntry?.map((entry) => {
-      console.log("htmlEntry", entry.esEntry.in);
+      console.log("htmlEntry", entry.inputHtmlPath);
       return HtmlBuild({
         ...config?.esbuild,
-        path: entry.esEntry.in,
+        path: entry.inputHtmlPath,
         serveOptions: { ...serveOptions, servedir: entry.servedir }, // 每个服务独立的目录
         platform: "browser",
         format: "esm",
@@ -207,7 +207,17 @@ export const build = async (option: BuildOptions) => {
         serve: option.serve,
         bundle: true,
         write: false,
-        plugins: config?.esbuild?.plugins,
+        plugins: [
+          ...(config?.esbuild?.plugins || []),
+          {
+            name: "get-resource",
+            setup(build) {
+              build.onEnd(async (result) => {
+                console.log(result, "result");
+              });
+            },
+          },
+        ],
       });
     })
   );
