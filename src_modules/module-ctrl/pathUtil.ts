@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname } from "node:path";
 
 export interface Meta {
@@ -24,3 +24,12 @@ export const getFileDirPath = (meta: Meta) => dirname(getFilePath(meta));
  * @returns
  */
 export const getRootDirname = () => process.cwd();
+
+/**
+ * 获取当前模块的esm路径：file:///
+ * @param path 需要转换的路径
+ * @returns
+ */
+export const getEsmPath = (path: string) => {
+  return pathToFileURL(path).href;
+};

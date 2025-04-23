@@ -17,6 +17,13 @@ export declare const cpSpecificSrcmodule: (projectPath: string, moduleName: stri
 export declare const depKeys: string[];
 
 /**
+ * 获取当前模块的esm路径：file:///
+ * @param path 需要转换的路径
+ * @returns
+ */
+export declare const getEsmPath: (path: string) => string;
+
+/**
  * 获取当前模块路径
  * @param meta import.meta
  * @returns

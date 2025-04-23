@@ -30,7 +30,9 @@ function copyDirectory(src: string, dest: string) {
   }
 }
 
-export async function createSubModuleHandler(argv: CliOptions) {
+export async function createSubModuleHandler(
+  argv: CliOptions
+): Promise<undefined> {
   console.log("Welcome to create-submodule! 🚀");
 
   // 获取根目录路径

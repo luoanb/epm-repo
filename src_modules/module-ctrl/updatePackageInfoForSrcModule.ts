@@ -139,3 +139,5 @@ export function windowsPathToLinuxPath(
   }
   return `./${linuxPath}`;
 }
+
+export { windowsPathToLinuxPath as formatLinuxPath };

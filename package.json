@@ -18,6 +18,11 @@
       "import": "./bin/bin.js",
       "require": "./bin/bin.cjs",
       "types": "./bin/bin.d.ts"
+    },
+    "./defineConfig": {
+      "import": "./dist/defineConfig.js",
+      "require": "./dist/defineConfig.cjs",
+      "types": "./dist/defineConfig.d.ts"
     }
   },
   "srcModule": {
@@ -25,14 +30,16 @@
     "buildType": "lib",
     "dist": {
       ".": "./src/index.ts",
-      "./bin": "./src/bin.ts"
+      "./bin": "./src/bin.ts",
+      "./defineConfig": "./src/defineConfig.ts"
     }
   },
   "devDependencies": {
-    "@types/dts-bundle": "^0.0.35",
     "@types/node": "^22.14.0",
     "@types/yargs": "^17.0.33",
+    "epm-config": "./src_modules/epm-config",
     "exception": "./src_modules/exception",
+    "html-build": "./src_modules/html-build",
     "iconv-lite": "^0.6.3",
     "module-ctrl": "./src_modules/module-ctrl",
     "ts-node": "^10.9.2",
@@ -45,6 +52,7 @@
     "@craftamap/esbuild-plugin-html": "^0.9.0",
     "@microsoft/api-extractor": "^7.52.3",
     "chardet": "^2.1.0",
+    "cheerio": "^1.0.0",
     "esbuild": "^0.25.2",
     "inquirer": "^12.5.2"
   }

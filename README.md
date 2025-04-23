@@ -108,3 +108,7 @@ bin.cjs createExportFile <filetName> 创建可导出文件 [aliases: cf]
 # 底层技术
 
 项目底层基于 esbuild
+
+目前发现 esbuild 仅可用于快速构建 Javascript 或 Typescript（生成 d.ts 也表现得很吃力），当应用场景脱离 JavaScript 范畴拓展到 HTML 时，他的插件机制和构建机制都表现得很吃力。
+
+当构建 HTML 时，可能不是说以它为主，以插件形式支持 HTML,而是自行处理 HTML,提取出它能处理的资源来给去构建。

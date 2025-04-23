@@ -4,9 +4,10 @@ import { dts } from "./dts";
 import path from "path";
 import { Exception } from "exception";
 import { loadConfig } from "../utils/loadConfig";
-import { WebAppHtmlPlugin } from "../build/bundle/WebAppHtmlPlugin";
-import { getSrcmoduleTsconfigPaths } from "../setTsconfigSrcmodule";
-
+import { pluginRename } from "./bundle/pluginRename";
+import { HtmlBuild } from "./html";
+// import HtmlPlugin from "plugin-html";
+// import htmlPlugin from "@chialab/esbuild-plugin-html";
 export interface BuildOptions {
   watch: boolean;
   serve: boolean;
@@ -19,7 +20,7 @@ function getName(...paths: string[]) {
   return windowsPathToLinuxPath(path.join(...paths), true);
 }
 
-const getOutName = (
+export const getOutName = (
   it: ModuleItem,
   entryInfo: any,
   type: "js" | "ts" = "js"
@@ -59,11 +60,14 @@ export const build = async (option: BuildOptions) => {
         // 非lib不打包dts（buildType）
         if (it.packageInfo.srcModule?.buildType != "web-app") {
           dtsEntry.push({
-            in: windowsPathToLinuxPath(
-              path.join(it.src, entryInfo.input.src),
-              true
-            ),
-            out: getOutName(it, entryInfo, "ts"),
+            ...it,
+            esEntry: {
+              in: windowsPathToLinuxPath(
+                path.join(it.src, entryInfo.input.src),
+                true
+              ),
+              out: getOutName(it, entryInfo, "ts"),
+            },
           });
         }
         // 源码库无需打包
@@ -72,6 +76,11 @@ export const build = async (option: BuildOptions) => {
         }
         if (it.packageInfo.platform == "web") {
           if (it.packageInfo.srcModule?.buildType == "web-app") {
+            const servedir = windowsPathToLinuxPath(
+              path.join(it.src, SrcModuleInfo.getOutputDir(it.packageInfo)),
+              true
+            );
+            console.log("servedir", servedir);
             htmlEntry.push({
               esEntry: {
                 in: windowsPathToLinuxPath(
@@ -80,12 +89,12 @@ export const build = async (option: BuildOptions) => {
                 ),
                 out: getOutName(it, entryInfo, "js"),
               },
-              inputHtmlPath: path.join(
-                it.src,
-                SrcModuleInfo.getOutputDir(it.packageInfo),
-                "index.html"
+              inputHtmlPath: windowsPathToLinuxPath(
+                path.join(it.src, "index.html"),
+                true
               ),
-              outHtmlPath: path.join(it.src, "index.html"),
+              outHtmlPath: "index.html", // 直接输出到{servedir}/index.html
+              servedir,
             });
           } else {
             webEntry.push({
@@ -119,7 +128,7 @@ export const build = async (option: BuildOptions) => {
       }
     }
     // 或者特定模式(不但要监听模式，且关闭全量打包)
-    else if (option.watch && !option.all) {
+    else if ((option.watch || option.serve) && !option.all) {
       // 仅处理根目录
       if (it.isRoot) {
         fillEntryByModuleItem(it);
@@ -132,98 +141,133 @@ export const build = async (option: BuildOptions) => {
   }
 
   const config = await loadConfig();
+  const serveOptions = config?.serveOptions;
 
-  Promise.all([
-    buildOnePlatForm({
-      ...config?.esbuild,
-      entryPoints: webEntry,
-      platform: "browser",
-      format: "esm",
-      outdir: "./",
-      watch: option.watch,
-      serve: option.serve,
-    }),
-    buildOnePlatForm({
-      ...config?.esbuild,
-      entryPoints: nodeEntry,
-      platform: "node",
-      format: "cjs",
-      outdir: "./",
-      watch: option.watch,
-      serve: option.serve,
-    }),
-    ...htmlEntry?.map((entry) =>
+  const allPromise: Promise<any>[] = [];
+  if (webEntry?.length) {
+    allPromise.push(
       buildOnePlatForm({
         ...config?.esbuild,
-        entryPoints: [entry],
+        serveOptions: serveOptions,
+        entryPoints: webEntry,
+        platform: "browser",
+        format: "esm",
+        outdir: "./",
+        plugins: [
+          pluginRename({
+            rename: async (file) => {
+              return path.extname(file.path) == ".js"
+                ? file.path.slice(0, -3)
+                : file.path;
+            },
+            write: true, // config?.esbuild?.write,
+          }),
+        ],
+        watch: option.watch,
+        serve: false, // lib模式默认不支持serve
+      })
+    );
+  }
+  if (nodeEntry?.length) {
+    allPromise.push(
+      buildOnePlatForm({
+        ...config?.esbuild,
+        serveOptions: serveOptions,
+        entryPoints: nodeEntry,
         platform: "node",
         format: "cjs",
         outdir: "./",
         watch: option.watch,
-        serve: option.serve,
-
+        serve: false,
         plugins: [
-          WebAppHtmlPlugin({
-            entryPoint: entry.in,
-            inputHtmlPath: entry.inputHtmlPath,
-            outHtmlPath: entry.outHtmlPath,
+          pluginRename({
+            rename: async (file) => {
+              return path.extname(file.path) == ".js"
+                ? file.path.slice(0, -3)
+                : file.path;
+            },
+            write: true, // config?.esbuild?.write,
           }),
-          ...(config?.esbuild?.plugins || []),
         ],
       })
-    ),
-  ]);
+    );
+  }
+
+  allPromise.push(
+    ...htmlEntry?.map((entry) => {
+      console.log("htmlEntry", entry.esEntry.in);
+      return HtmlBuild({
+        ...config?.esbuild,
+        path: entry.esEntry.in,
+        serveOptions: { ...serveOptions, servedir: entry.servedir }, // 每个服务独立的目录
+        platform: "browser",
+        format: "esm",
+        outdir: entry.servedir, // 每个HTML打包独立的输出目录
+        watch: option.watch,
+        serve: option.serve,
+        bundle: true,
+        write: false,
+        plugins: config?.esbuild?.plugins,
+      });
+    })
+  );
+
+  Promise.all(allPromise);
 
   // 仅显示设置需要dts才生成dts(dts太耗时了)
   if (option.dts) {
     console.log("d.ts声明生成中");
-    // // await dts({mainEntryPointFilePath:dts})
-    // const paths = await getSrcmoduleTsconfigPaths("./", "dts");
 
-    const rootEntry: any[] = [];
-    const otherEntry = dtsEntry.filter((item) => {
-      if (item.in.indexOf("src_modules") == -1) {
-        rootEntry.push(item);
-        return false;
-      }
-      return true;
+    dts({
+      moduleMap: moduleList,
     });
 
-    await Promise.all(
-      otherEntry.map((file) =>
-        dts({
-          projectPath: "./",
-          mainEntryPointFilePath: file.in,
-          bundledPackages: [...Object.keys(moduleList)], //未打包的dts需要提前打包
-          dtsRollup: {
-            enabled: true,
-            untrimmedFilePath: file.out,
-          },
-          // overrideTsconfig: {
-          //   compilerOptions: {
-          //     paths: paths,
-          //   },
-          // },
-        })
-      )
-    );
-    await Promise.all(
-      rootEntry.map((file) =>
-        dts({
-          projectPath: "./",
-          mainEntryPointFilePath: file.in,
-          bundledPackages: [...Object.keys(moduleList)], //未打包的dts需要提前打包
-          dtsRollup: {
-            enabled: true,
-            untrimmedFilePath: file.out,
-          },
-          // overrideTsconfig: {
-          //   compilerOptions: {
-          //     paths: paths,
-          //   },
-          // },
-        })
-      )
-    );
+    // // todo 依赖顺序处理
+
+    // const rootEntry: any[] = [];
+    // const otherEntry = dtsEntry.filter(({ esEntry: item }) => {
+    //   if (item.in.indexOf("src_modules") == -1) {
+    //     rootEntry.push(item);
+    //     return false;
+    //   }
+    //   return true;
+    // });
+
+    // await Promise.all(
+    //   otherEntry.map(({ esEntry: file, src }) =>
+    //     dts({
+    //       projectPath: src,
+    //       mainEntryPointFilePath: file.in,
+    //       bundledPackages: [...Object.keys(moduleList)], //未打包的dts需要提前打包
+    //       dtsRollup: {
+    //         enabled: true,
+    //         untrimmedFilePath: file.out,
+    //       },
+    //       // overrideTsconfig: {
+    //       //   compilerOptions: {
+    //       //     paths: paths,
+    //       //   },
+    //       // },
+    //     })
+    //   )
+    // );
+    // await Promise.all(
+    //   rootEntry.map(({ esEntry: file, src }) =>
+    //     dts({
+    //       projectPath: src,
+    //       mainEntryPointFilePath: file.in,
+    //       bundledPackages: [...Object.keys(moduleList)], //未打包的dts需要提前打包
+    //       dtsRollup: {
+    //         enabled: true,
+    //         untrimmedFilePath: file.out,
+    //       },
+    //       // overrideTsconfig: {
+    //       //   compilerOptions: {
+    //       //     paths: paths,
+    //       //   },
+    //       // },
+    //     })
+    //   )
+    // );
   }
 };

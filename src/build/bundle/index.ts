@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
 import { bundleConfig } from "./config";
+import path from "path";
 
 export interface BuildOnePlatFormOptions extends esbuild.BuildOptions {
   /** 是否时可执行脚本 */
@@ -7,6 +8,7 @@ export interface BuildOnePlatFormOptions extends esbuild.BuildOptions {
   watch?: boolean;
   serve?: boolean;
   custom?: boolean;
+  serveOptions?: esbuild.ServeOptions;
 }
 export async function buildOnePlatForm({
   isBin,
@@ -14,8 +16,14 @@ export async function buildOnePlatForm({
   watch,
   serve,
   custom,
+  serveOptions: serveOptionsBase,
+  write,
   ...options
 }: BuildOnePlatFormOptions) {
+  const serveOptions: esbuild.ServeOptions = {
+    ...serveOptionsBase,
+    servedir: path.resolve(process.cwd(), serveOptionsBase?.servedir || ""),
+  };
   const ctx = await esbuild.context({
     ...bundleConfig,
     banner: {
@@ -29,7 +37,16 @@ export async function buildOnePlatForm({
     ctx.watch();
     return ctx;
   } else if (serve) {
-    ctx.serve();
+    await ctx.watch();
+    const res = await ctx.serve(serveOptions);
+    if (res.hosts && res.port) {
+      console.log("-------------------");
+      console.log(`Server running at:`);
+      res.hosts.forEach((host) => {
+        console.log(`   http://${host}:${res.port}`);
+      });
+      console.log("-------------------");
+    }
     return ctx;
   } else if (custom) {
     return ctx;

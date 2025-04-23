@@ -5,7 +5,7 @@ import path from "path";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
 import { Exception } from "exception";
-import { getFileDirPath } from "module-ctrl/pathUtil";
+import { getFileDirPath, readJsonFile, wirteJsonFile } from "module-ctrl";
 interface CliOptions {
   projectName?: string;
   template?: string;
@@ -78,6 +78,16 @@ async function main() {
 
   // Copy template files to the target directory
   copyDirectory(selectedTemplateDir, targetDir);
+
+  // Replace placeholders in package.json
+  const packageJsonPath = path.join(targetDir, "package.json");
+  if (fs.existsSync(packageJsonPath)) {
+    const packageJson = await readJsonFile(packageJsonPath);
+    if (packageJson) {
+      packageJson.name = options.projectName;
+      await wirteJsonFile(packageJsonPath, packageJson, 2);
+    }
+  }
 
   console.log("Installing dependencies...");
   try {
