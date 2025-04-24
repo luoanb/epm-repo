@@ -6,8 +6,9 @@ import { Exception } from "exception";
 import { loadConfig } from "../utils/loadConfig";
 import { pluginRename } from "./bundle/pluginRename";
 import { HtmlBuild } from "./html";
-// import HtmlPlugin from "plugin-html";
-// import htmlPlugin from "@chialab/esbuild-plugin-html";
+
+// TODO cache 缓存优化
+
 export interface BuildOptions {
   watch: boolean;
   serve: boolean;
@@ -207,17 +208,7 @@ export const build = async (option: BuildOptions) => {
         serve: option.serve,
         bundle: true,
         write: false,
-        plugins: [
-          ...(config?.esbuild?.plugins || []),
-          {
-            name: "get-resource",
-            setup(build) {
-              build.onEnd(async (result) => {
-                console.log(result, "result");
-              });
-            },
-          },
-        ],
+        plugins: config?.esbuild?.plugins,
       });
     })
   );
@@ -232,7 +223,7 @@ export const build = async (option: BuildOptions) => {
       moduleMap: moduleList,
     });
 
-    // // todo 依赖顺序处理
+    // // TODO 依赖顺序处理
 
     // const rootEntry: any[] = [];
     // const otherEntry = dtsEntry.filter(({ esEntry: item }) => {

@@ -2,6 +2,10 @@ import * as esbuild from "esbuild";
 import { load } from "cheerio";
 import fs from "fs/promises";
 import { buildOnePlatForm } from "../bundle";
+import connect from "connect";
+import { formatLinuxPath } from "module-ctrl";
+import path from "path";
+import http from "http";
 
 export interface HtmlBuildOptions extends Partial<esbuild.BuildOptions> {
   path: string /** HTML 文件路径 */;
@@ -11,11 +15,6 @@ export interface HtmlBuildOptions extends Partial<esbuild.BuildOptions> {
   serve?: boolean;
   custom?: boolean;
   serveOptions?: esbuild.ServeOptions;
-}
-
-// 定义加载器类型
-interface Loader {
-  [ext: string]: string;
 }
 
 // 定义资源选择器类型
@@ -43,11 +42,18 @@ const resourceSelectors: ResourceSelector[] = [
   { selector: "object[data]", attr: "data", type: "object" }, // 对象
 ];
 
+function getHttpUrl(file: esbuild.OutputFile, serveDir: string) {
+  return formatLinuxPath(
+    path.join("/", path.relative(serveDir || "./dist", file.path))
+  );
+}
+
+// TODO build写文件& 仅监听模式写文件
 export async function HtmlBuild({
   path: htmlPath,
   ...options
 }: HtmlBuildOptions) {
-  const content = await fs.readFile(htmlPath, "utf8");
+  const content = await fs.readFile(htmlPath, "utf8"); // TODO 监听文件变化
   const $ = load(content);
 
   // 收集资源并按类型分组
@@ -56,6 +62,7 @@ export async function HtmlBuild({
     $(selector).each((i, el) => {
       const resource = $(el).attr(attr);
       if (!resource) return;
+      $(el).remove();
       if (!resources[type]) {
         resources[type] = [];
       }
@@ -64,9 +71,69 @@ export async function HtmlBuild({
   });
 
   console.log("Collected resources by type:", resources);
+
+  let appRes: Record<string, esbuild.OutputFile> = {};
+  let emptyHtml = $.html();
+  let $res = load(emptyHtml);
   const res = await buildOnePlatForm({
     ...options,
-    entryPoints: resources["script"],
+    metafile: true,
+    serve: false,
+    watch: options.serve || options.watch,
+    write: options.write && !options.serve,
+    plugins: [
+      ...(options.plugins || []),
+      {
+        name: "get-resource",
+        setup(build) {
+          build.onEnd(async (result) => {
+            console.log(result, "result");
+            result.outputFiles?.forEach((file) => {
+              if (options.serve) {
+                appRes[getHttpUrl(file, options.outdir || "./dist")] = file;
+                $res = load(emptyHtml);
+                $res("body").append(
+                  `<script type="module" src="${getHttpUrl(
+                    file,
+                    options.outdir || "./dist"
+                  )}"></script>`
+                );
+              }
+            });
+          });
+        },
+      },
+    ],
+    entryPoints: resources["script"], // TODO // 其他资源类型 取决于esbuild的loader和插件
   });
-  console.log(res, "build success");
+
+  if (options.serve) {
+    const app = connect();
+    app.use((req, res) => {
+      if (!req.url) {
+        res.end($res.html());
+        return;
+      }
+      const file = appRes[req.url];
+      // TODO 热更新
+      // TODO 动态处理其他资源类型
+      if (file) {
+        res.setHeader("Content-Type", "application/javascript");
+        res.end(file.contents);
+      } else {
+        res.setHeader("Content-Type", "text/html");
+        res.end($res.html());
+      }
+    });
+    const serve = http.createServer(app);
+    serve.listen(options.serveOptions?.port || 3000, () => {
+      const address = serve.address();
+      console.log(
+        "Server running at:",
+        typeof address === "string"
+          ? address
+          : `${address?.address}:${address?.port}`
+      );
+    });
+  }
 }
