@@ -3,3 +3,4 @@ export * from "./updatePackageInfoForSrcModule";
 export * from "./SrcModuleInfo";
 export * from "./pathUtil";
 export * from "./JsonFile";
+export * from "./Cache_Createor";

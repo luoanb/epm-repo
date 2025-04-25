@@ -6,6 +6,9 @@ import connect from "connect";
 import { formatLinuxPath } from "module-ctrl";
 import path from "path";
 import http from "http";
+import { Cache_Createor } from "module-ctrl";
+import * as fileType from "file-type";
+import { pathToFileURL } from "url";
 
 export interface HtmlBuildOptions extends Partial<esbuild.BuildOptions> {
   path: string /** HTML 文件路径 */;
@@ -23,6 +26,11 @@ interface ResourceSelector {
   attr: string;
   type: string; // 节点类型
 }
+
+type ResType = null | {
+  content: any;
+  mimeType: string | undefined;
+};
 
 // 定义 HTML5 资源选择器并标注节点类型
 const resourceSelectors: ResourceSelector[] = [
@@ -42,6 +50,18 @@ const resourceSelectors: ResourceSelector[] = [
   { selector: "object[data]", attr: "data", type: "object" }, // 对象
 ];
 
+const esbuildSourceExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"];
+
+/**
+ * 判断是否是静态资源路径
+ * @param url 资源路径
+ * @returns
+ */
+function isStaticUrl(url: string) {
+  // 是否是本地路径
+  return url.startsWith("/") || url.startsWith("./") || url.startsWith("../");
+}
+
 function getHttpUrl(file: esbuild.OutputFile, serveDir: string) {
   return formatLinuxPath(
     path.join("/", path.relative(serveDir || "./dist", file.path))
@@ -57,25 +77,28 @@ export async function HtmlBuild({
   const $ = load(content);
 
   // 收集资源并按类型分组
-  const resources: Record<string, string[]> = {};
+  const esbuildResources: { url: string; type: string }[] = [];
+  const resources: { url: string; type: string }[] = [];
   resourceSelectors.forEach(({ selector, attr, type }) => {
     $(selector).each((i, el) => {
       const resource = $(el).attr(attr);
+
       if (!resource) return;
-      $(el).remove();
-      if (!resources[type]) {
-        resources[type] = [];
+      if (!isStaticUrl(resource)) return;
+      if (esbuildSourceExts.includes(path.extname(resource))) {
+        $(el).remove();
+        esbuildResources.push({ url: resource, type });
+      } else {
+        resources.push({ url: resource, type });
       }
-      resources[type].push(resource);
     });
   });
-
-  console.log("Collected resources by type:", resources);
 
   let appRes: Record<string, esbuild.OutputFile> = {};
   let emptyHtml = $.html();
   let $res = load(emptyHtml);
-  const res = await buildOnePlatForm({
+
+  await buildOnePlatForm({
     ...options,
     metafile: true,
     serve: false,
@@ -104,22 +127,43 @@ export async function HtmlBuild({
         },
       },
     ],
-    entryPoints: resources["script"], // TODO // 其他资源类型 取决于esbuild的loader和插件
+    entryPoints: esbuildResources.map((it) => it.url),
   });
 
   if (options.serve) {
     const app = connect();
-    app.use((req, res) => {
+    const fileCache = Cache_Createor(async (filePath) => {
+      try {
+        const content = await fs.readFile(filePath);
+        return {
+          content,
+          mimeType: (await fileType.fileTypeFromBuffer(content))?.mime,
+        };
+      } catch (error) {
+        return null;
+      }
+    });
+    app.use(async (req, res) => {
       if (!req.url) {
         res.end($res.html());
         return;
       }
-      const file = appRes[req.url];
+      let file: ResType = null;
+
+      if (appRes[req.url]?.contents) {
+        file = {
+          content: appRes[req.url]?.contents,
+          mimeType: "application/javascript",
+        };
+      }
+      if (!file) {
+        file = await fileCache.getValue(pathToFileURL(req.url).href);
+      }
       // TODO 热更新
       // TODO 动态处理其他资源类型
       if (file) {
-        res.setHeader("Content-Type", "application/javascript");
-        res.end(file.contents);
+        res.setHeader("Content-Type", file.mimeType || "text/plain");
+        res.end(file.content);
       } else {
         res.setHeader("Content-Type", "text/html");
         res.end($res.html());
