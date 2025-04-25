@@ -207,7 +207,7 @@ export const build = async (option: BuildOptions) => {
         watch: option.watch,
         serve: option.serve,
         bundle: true,
-        write: false,
+        write: true,
         plugins: config?.esbuild?.plugins,
       });
     })

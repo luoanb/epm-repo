@@ -9,6 +9,8 @@ import http from "http";
 import { Cache_Createor } from "module-ctrl";
 import * as fileType from "file-type";
 import { pathToFileURL } from "url";
+import { cwd } from "process";
+import { mkdirSync, existsSync } from "fs";
 
 export interface HtmlBuildOptions extends Partial<esbuild.BuildOptions> {
   path: string /** HTML 文件路径 */;
@@ -71,6 +73,7 @@ function getHttpUrl(file: esbuild.OutputFile, serveDir: string) {
 // TODO build写文件& 仅监听模式写文件
 export async function HtmlBuild({
   path: htmlPath,
+  outdir = "./dist",
   ...options
 }: HtmlBuildOptions) {
   const content = await fs.readFile(htmlPath, "utf8"); // TODO 监听文件变化
@@ -102,6 +105,7 @@ export async function HtmlBuild({
     ...options,
     metafile: true,
     serve: false,
+    outdir,
     watch: options.serve || options.watch,
     write: options.write && !options.serve,
     plugins: [
@@ -112,14 +116,24 @@ export async function HtmlBuild({
           build.onEnd(async (result) => {
             console.log(result, "result");
             result.outputFiles?.forEach((file) => {
-              if (options.serve) {
-                appRes[getHttpUrl(file, options.outdir || "./dist")] = file;
-                $res = load(emptyHtml);
-                $res("body").append(
-                  `<script type="module" src="${getHttpUrl(
-                    file,
-                    options.outdir || "./dist"
-                  )}"></script>`
+              appRes[getHttpUrl(file, outdir)] = file;
+              $res = load(emptyHtml);
+              $res("body").append(
+                `<script type="module" src="${getHttpUrl(
+                  file,
+                  outdir
+                )}"></script>`
+              );
+              if (options.write) {
+                // 更新build导出文件
+                if (!existsSync(path.dirname(file.path))) {
+                  mkdirSync(path.dirname(file.path), { recursive: true });
+                }
+                fs.writeFile(file.path, file.contents);
+                // 更新html文件
+                fs.writeFile(
+                  path.join(cwd(), outdir, path.basename(htmlPath)),
+                  $res.html()
                 );
               }
             });
@@ -157,7 +171,7 @@ export async function HtmlBuild({
         };
       }
       if (!file) {
-        file = await fileCache.getValue(pathToFileURL(req.url).href);
+        file = await fileCache.getValue(path.join(cwd(), req.url));
       }
       // TODO 热更新
       // TODO 动态处理其他资源类型
@@ -178,6 +192,14 @@ export async function HtmlBuild({
           ? address
           : `${address?.address}:${address?.port}`
       );
+    });
+  } else if (options.write) {
+    resources.forEach(({ url }) => {
+      const targetPath = path.join(cwd(), outdir, url);
+      if (!existsSync(targetPath)) {
+        mkdirSync(targetPath, { recursive: true });
+      }
+      fs.rename(path.join(cwd(), url), targetPath);
     });
   }
 }

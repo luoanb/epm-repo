@@ -14,4 +14,4 @@ dist/
 
 .gitcp/
 ._dist_dts
-./bin
+bin
