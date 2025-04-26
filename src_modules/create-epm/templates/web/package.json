@@ -22,7 +22,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "epm-repo": "^0.0.9",
+    "epm-repo": "^0.0.11",
     "typescript": "^5.8.2"
   }
 }
