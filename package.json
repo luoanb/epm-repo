@@ -1,6 +1,6 @@
 {
   "name": "epm-repo",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "scripts": {
     "test": "vitest",
     "prebuild": "esbuild src/bin.ts --outfile=dist/bin.js --bundle --platform=node --external:esbuild --external:@microsoft/api-extractor --external:@craftamap/esbuild-plugin-html",
@@ -14,6 +14,10 @@
   },
   "sideEffects": false,
   "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
     "./bin": {
       "import": "./bin/bin.js",
       "require": "./bin/bin.cjs",

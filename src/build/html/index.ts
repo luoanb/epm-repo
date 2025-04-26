@@ -101,13 +101,15 @@ export async function HtmlBuild({
   let emptyHtml = $.html();
   let $res = load(emptyHtml);
 
+  const write = options.write && !options.serve;
+
   await buildOnePlatForm({
     ...options,
     metafile: true,
     serve: false,
     outdir,
     watch: options.serve || options.watch,
-    write: options.write && !options.serve,
+    write,
     plugins: [
       ...(options.plugins || []),
       {
@@ -124,7 +126,7 @@ export async function HtmlBuild({
                   outdir
                 )}"></script>`
               );
-              if (options.write) {
+              if (write) {
                 // 更新build导出文件
                 if (!existsSync(path.dirname(file.path))) {
                   mkdirSync(path.dirname(file.path), { recursive: true });

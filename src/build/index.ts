@@ -24,12 +24,10 @@ function getName(...paths: string[]) {
 export const getOutName = (
   it: ModuleItem,
   entryInfo: any,
-  type: "js" | "ts" = "js"
+  type: "cjs" | "mjs" | "ts" = "cjs"
 ) => {
   const libName =
-    it.packageInfo.platform == "web"
-      ? entryInfo.output.import
-      : entryInfo.output.require;
+    type == "mjs" ? entryInfo.output.import : entryInfo.output.require;
   const dtsName = entryInfo.output.types;
   if (!libName) {
     return Exception.throw("1004", {
@@ -37,12 +35,12 @@ export const getOutName = (
     });
   }
   if (it.isRoot) {
-    return type == "js" ? libName : dtsName;
+    return type == "ts" ? dtsName : libName;
   }
   return getName(
     SrcModuleInfo.SRC_MODULES,
     it.name,
-    type == "js" ? libName : dtsName
+    type == "ts" ? dtsName : libName
   );
 };
 
@@ -50,7 +48,9 @@ export const build = async (option: BuildOptions) => {
   const { moduleMap: moduleList } =
     await SrcModuleInfo.getCurrentSrcModulesInfo("./");
   const webEntry: any[] = [];
+  const webEntryMjs: any[] = [];
   const nodeEntry: any[] = [];
+  const nodeEntryMjs: any[] = [];
   const dtsEntry: any[] = [];
   const htmlEntry: any[] = [];
 
@@ -75,6 +75,11 @@ export const build = async (option: BuildOptions) => {
         if (!SrcModuleInfo.isNeedBuild(it.packageInfo)) {
           return;
         }
+        const inPath = windowsPathToLinuxPath(
+          path.join(it.src, entryInfo.input.src),
+          true
+        );
+
         if (it.packageInfo.platform == "web") {
           if (it.packageInfo.srcModule?.buildType == "web-app") {
             const servedir = windowsPathToLinuxPath(
@@ -83,13 +88,6 @@ export const build = async (option: BuildOptions) => {
             );
             console.log("servedir", servedir);
             htmlEntry.push({
-              esEntry: {
-                in: windowsPathToLinuxPath(
-                  path.join(it.src, entryInfo.input.src),
-                  true
-                ),
-                out: getOutName(it, entryInfo, "js"),
-              },
               inputHtmlPath: windowsPathToLinuxPath(
                 path.join(it.src, "index.html"),
                 true
@@ -99,20 +97,25 @@ export const build = async (option: BuildOptions) => {
             });
           } else {
             webEntry.push({
+              in: inPath,
+              out: getOutName(it, entryInfo, "cjs"),
+            });
+            webEntryMjs.push({
               in: windowsPathToLinuxPath(
                 path.join(it.src, entryInfo.input.src),
                 true
               ),
-              out: getOutName(it, entryInfo, "js"),
+              out: getOutName(it, entryInfo, "mjs"),
             });
           }
         } else {
           nodeEntry.push({
-            in: windowsPathToLinuxPath(
-              path.join(it.src, entryInfo.input.src),
-              true
-            ),
-            out: getOutName(it, entryInfo, "js"),
+            in: inPath,
+            out: getOutName(it, entryInfo, "cjs"),
+          });
+          nodeEntryMjs.push({
+            in: inPath,
+            out: getOutName(it, entryInfo, "mjs"),
           });
         }
       }
@@ -152,6 +155,30 @@ export const build = async (option: BuildOptions) => {
         serveOptions: serveOptions,
         entryPoints: webEntry,
         platform: "browser",
+        format: "cjs",
+        outdir: "./",
+        plugins: [
+          pluginRename({
+            rename: async (file) => {
+              return path.extname(file.path) == ".js"
+                ? file.path.slice(0, -3)
+                : file.path;
+            },
+            write: true, // config?.esbuild?.write,
+          }),
+        ],
+        watch: option.watch,
+        serve: false, // lib模式默认不支持serve
+      })
+    );
+  }
+  if (webEntryMjs?.length) {
+    allPromise.push(
+      buildOnePlatForm({
+        ...config?.esbuild,
+        serveOptions: serveOptions,
+        entryPoints: webEntryMjs,
+        platform: "browser",
         format: "esm",
         outdir: "./",
         plugins: [
@@ -177,6 +204,30 @@ export const build = async (option: BuildOptions) => {
         entryPoints: nodeEntry,
         platform: "node",
         format: "cjs",
+        outdir: "./",
+        watch: option.watch,
+        serve: false,
+        plugins: [
+          pluginRename({
+            rename: async (file) => {
+              return path.extname(file.path) == ".js"
+                ? file.path.slice(0, -3)
+                : file.path;
+            },
+            write: true, // config?.esbuild?.write,
+          }),
+        ],
+      })
+    );
+  }
+  if (nodeEntryMjs?.length) {
+    allPromise.push(
+      buildOnePlatForm({
+        ...config?.esbuild,
+        serveOptions: serveOptions,
+        entryPoints: nodeEntryMjs,
+        platform: "node",
+        format: "esm",
         outdir: "./",
         watch: option.watch,
         serve: false,
