@@ -116,7 +116,6 @@ export async function HtmlBuild({
         name: "get-resource",
         setup(build) {
           build.onEnd(async (result) => {
-            console.log(result, "result");
             result.outputFiles?.forEach((file) => {
               appRes[getHttpUrl(file, outdir)] = file;
               $res = load(emptyHtml);
@@ -192,7 +191,7 @@ export async function HtmlBuild({
         "Server running at:",
         typeof address === "string"
           ? address
-          : `${address?.address}:${address?.port}`
+          : `http://127.0.0.1:${address?.port}`
       );
     });
   } else if (options.write) {

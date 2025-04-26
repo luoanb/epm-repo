@@ -86,7 +86,6 @@ export const build = async (option: BuildOptions) => {
               path.join(it.src, SrcModuleInfo.getOutputDir(it.packageInfo)),
               true
             );
-            console.log("servedir", servedir);
             htmlEntry.push({
               inputHtmlPath: windowsPathToLinuxPath(
                 path.join(it.src, "index.html"),
@@ -247,7 +246,6 @@ export const build = async (option: BuildOptions) => {
 
   allPromise.push(
     ...htmlEntry?.map((entry) => {
-      console.log("htmlEntry", entry.inputHtmlPath);
       return HtmlBuild({
         ...config?.esbuild,
         path: entry.inputHtmlPath,
