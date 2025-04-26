@@ -2,6 +2,7 @@ import { readdir, stat, readFile } from "fs/promises";
 import path from "path";
 import {
   depKeys,
+  formatLinuxPath,
   windowsPathToLinuxPath,
 } from "./updatePackageInfoForSrcModule";
 import { Cache_Createor } from "./Cache_Createor";
@@ -9,6 +10,14 @@ import { Cache_Createor } from "./Cache_Createor";
 import fs, { existsSync, statSync } from "fs";
 import { Exception } from "exception";
 type PackageInfo = Record<string, any>;
+
+export interface ModuleExport {
+  import?: string;
+  require?: string;
+  types?: string;
+  default?: string;
+  node?: string;
+}
 
 export type ModuleItem = {
   /** 模块名称 */
@@ -176,6 +185,15 @@ export class SrcModuleInfo {
   };
 
   /**
+   * 是否必须build(App模式必须build)
+   * @param pkgInfo
+   * @returns
+   **/
+  static isMustBuild = (pkgInfo: false | Record<string, any>) => {
+    return pkgInfo && pkgInfo.srcModule?.buildType === "web-app";
+  };
+
+  /**
    * 获取输出路径
    * @param pkgInfo
    * @returns
@@ -198,9 +216,72 @@ export class SrcModuleInfo {
    * @param pkgInfo
    * @returns
    */
-  static getMainSrc = (pkgInfo: Record<string, any>) => {
+  static getMainSrc(pkgInfo: Record<string, any>): string {
     return pkgInfo.srcModule.dist?.["."] || pkgInfo.main || pkgInfo.module;
+  }
+  /**
+   * 获取模块主导出路径
+   * @param pkgInfo
+   * @returns
+   */
+  static getMainExport(pkgInfo: Record<string, any>): string {
+    return (
+      pkgInfo.exports?.["."] || {
+        import: pkgInfo.module || pkgInfo.main,
+        require: pkgInfo.main,
+        types: pkgInfo.types,
+      }
+    );
+  }
+
+  /**
+   * 根据源码路径packageJson.srcModule?.dist 获取导出信息,会拼接packageJson.outputDir
+   * @param pkgInfo
+   */
+  static getDistExports(packageJson: Record<string, any>) {
+    const outputDir = this.getOutputDir(packageJson);
+    const sources = packageJson.srcModule?.dist;
+    return Object.keys(sources).reduce((acc, key) => {
+      const source = path.join(outputDir, sources[key]);
+      const extname = path.extname(source);
+      acc[key] = {
+        import: formatLinuxPath(source.replace(extname, ".js"), true),
+        require: formatLinuxPath(source.replace(extname, ".cjs"), true),
+        types: formatLinuxPath(source.replace(extname, ".d.ts"), true),
+      };
+      return acc;
+    }, {} as Record<string, ModuleExport>);
+  }
+
+  /**
+   * 获取所有导出信息
+   * @param pkgInfo
+   * @returns
+   */
+  static getExportModules = (pkgInfo: Record<string, any>) => {
+    return {
+      ...pkgInfo.exports,
+      ".": this.getMainExport(pkgInfo),
+    };
   };
+
+  /**
+   * 获取导出路径,会根据规则取具体的导出路径(string)
+   * @param pkgInfo
+   */
+  static getExportsPath(pkgInfo: Record<string, any>) {
+    const ms = this.getExportModules(pkgInfo);
+    const isModule = pkgInfo.type === "module";
+    return Object.keys(ms).reduce((acc, key) => {
+      const item = ms[key];
+      acc[key] =
+        (isModule ? item.import : item.require) ||
+        item.require ||
+        item.import ||
+        item.default;
+      return acc;
+    }, {} as Record<string, string>);
+  }
 
   /**
    * 通过pkgInfo 获取模块打包信息

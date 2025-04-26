@@ -13,6 +13,7 @@ import { Shell } from "./utils/Shell";
 import { build } from "./build";
 import { createSubModuleHandler } from "./createSubModule";
 import { createExportFile } from "./createExportFile";
+import { switchModuleDistStatus } from "./swithModuleDistStatus";
 
 yargs(hideBin(process.argv))
   .command({
@@ -157,6 +158,19 @@ yargs(hideBin(process.argv))
         return;
       }
       await createExportFile(argv.filetName);
+    },
+  })
+  .command({
+    command: "swithBuildMode <projectName>", // 切换指定模块的打包模式
+    describe:
+      "切换指定模块的打包模式(源码模式-> 构建模式，构建模式-> 源码模式)",
+    aliases: ["sbm"],
+    async handler(argv: Record<string, any>) {
+      if (!argv.projectName) {
+        console.error("项目名称不能为空！");
+        return;
+      }
+      await switchModuleDistStatus(argv.projectName);
     },
   })
   .fail((msg, err) => {

@@ -1,1 +1,3 @@
-export const main = "Main";
+document
+  .getElementById("root")
+  ?.appendChild(document.createTextNode("Hello World!"));
