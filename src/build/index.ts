@@ -76,7 +76,7 @@ export const build = async (option: BuildOptions) => {
           return;
         }
         const inPath = windowsPathToLinuxPath(
-          path.join(it.src, entryInfo.input.src),
+          path.join(it.src, entryInfo.input.src || ""),
           true
         );
 
@@ -144,6 +144,7 @@ export const build = async (option: BuildOptions) => {
   }
 
   const config = await loadConfig();
+  console.log(config, "config");
   const serveOptions = config?.serveOptions;
 
   const allPromise: Promise<any>[] = [];
@@ -157,6 +158,7 @@ export const build = async (option: BuildOptions) => {
         format: "cjs",
         outdir: "./",
         plugins: [
+          ...(config?.esbuild?.plugins || []),
           pluginRename({
             rename: async (file) => {
               return path.extname(file.path) == ".js"
@@ -181,6 +183,7 @@ export const build = async (option: BuildOptions) => {
         format: "esm",
         outdir: "./",
         plugins: [
+          ...(config?.esbuild?.plugins || []),
           pluginRename({
             rename: async (file) => {
               return path.extname(file.path) == ".js"
@@ -207,6 +210,7 @@ export const build = async (option: BuildOptions) => {
         watch: option.watch,
         serve: false,
         plugins: [
+          ...(config?.esbuild?.plugins || []),
           pluginRename({
             rename: async (file) => {
               return path.extname(file.path) == ".js"
@@ -231,6 +235,7 @@ export const build = async (option: BuildOptions) => {
         watch: option.watch,
         serve: false,
         plugins: [
+          ...(config?.esbuild?.plugins || []),
           pluginRename({
             rename: async (file) => {
               return path.extname(file.path) == ".js"
@@ -243,6 +248,8 @@ export const build = async (option: BuildOptions) => {
       })
     );
   }
+
+  console.log("config", config);
 
   allPromise.push(
     ...htmlEntry?.map((entry) => {

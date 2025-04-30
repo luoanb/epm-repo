@@ -181,7 +181,14 @@ export class SrcModuleInfo {
    * @returns
    */
   static isNeedBuild = (pkgInfo: false | Record<string, any>) => {
-    return pkgInfo && pkgInfo.srcModule?.buildType && pkgInfo.srcModule?.dist;
+    if (!pkgInfo) {
+      return false;
+    }
+    return (
+      (pkgInfo.platform == "web" &&
+        pkgInfo.srcModule?.buildType == "web-app") ||
+      (pkgInfo.srcModule?.buildType && pkgInfo.srcModule?.dist)
+    );
   };
 
   /**

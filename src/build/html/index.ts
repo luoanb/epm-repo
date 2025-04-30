@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import { buildOnePlatForm } from "../bundle";
 import connect from "connect";
 import { formatLinuxPath } from "module-ctrl";
-import path from "path";
+import path, { dirname } from "path";
 import http from "http";
 import { Cache_Createor } from "module-ctrl";
 import * as fileType from "file-type";
@@ -70,6 +70,46 @@ function getHttpUrl(file: esbuild.OutputFile, serveDir: string) {
   );
 }
 
+/**
+ * 根据文件后缀返回对应的完整 DOM 节点
+ * @param filePath 文件路径
+ * @returns 对应的完整 DOM 节点字符串
+ */
+function getDomTagByExtension(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  const fileName = path.basename(filePath);
+  switch (ext) {
+    case ".js":
+    case ".mjs":
+    case ".cjs":
+      return `<script src="${fileName}" type="module"></script>`;
+    case ".css":
+      return `<link href="${fileName}" rel="stylesheet">`;
+    case ".png":
+    case ".jpg":
+    case ".jpeg":
+    case ".gif":
+    case ".svg":
+      return `<img src="${fileName}" alt="">`;
+    case ".ico":
+      return `<link href="${fileName}" rel="icon">`;
+    case ".mp4":
+    case ".webm":
+    case ".ogg":
+      return `<video src="${fileName}" controls></video>`;
+    case ".mp3":
+    case ".wav":
+    case ".flac":
+      return `<audio src="${fileName}" controls></audio>`;
+    case ".ttf":
+    case ".woff":
+    case ".woff2":
+      return `<style>@font-face { font-family: 'CustomFont'; src: url('${fileName}'); }</style>`;
+    default:
+      return `<!-- Unsupported file type: ${fileName} -->`;
+  }
+}
+
 // TODO build写文件& 仅监听模式写文件
 export async function HtmlBuild({
   path: htmlPath,
@@ -80,8 +120,8 @@ export async function HtmlBuild({
   const $ = load(content);
 
   // 收集资源并按类型分组
-  const esbuildResources: { url: string; type: string }[] = [];
-  const resources: { url: string; type: string }[] = [];
+  const esbuildResources: { url: string; type: string; fileUrl: string }[] = [];
+  const resources: { url: string; type: string; fileUrl: string }[] = [];
   resourceSelectors.forEach(({ selector, attr, type }) => {
     $(selector).each((i, el) => {
       const resource = $(el).attr(attr);
@@ -90,9 +130,17 @@ export async function HtmlBuild({
       if (!isStaticUrl(resource)) return;
       if (esbuildSourceExts.includes(path.extname(resource))) {
         $(el).remove();
-        esbuildResources.push({ url: resource, type });
+        esbuildResources.push({
+          url: path.join(dirname(htmlPath), resource),
+          fileUrl: path.join(dirname(htmlPath), resource),
+          type,
+        });
       } else {
-        resources.push({ url: resource, type });
+        resources.push({
+          url: resource,
+          type,
+          fileUrl: path.join(dirname(htmlPath), resource),
+        });
       }
     });
   });
@@ -102,6 +150,9 @@ export async function HtmlBuild({
   let $res = load(emptyHtml);
 
   const write = options.write && !options.serve;
+
+  console.log("esbuildResources", esbuildResources);
+  console.log("options.plugins", options.plugins);
 
   await buildOnePlatForm({
     ...options,
@@ -116,14 +167,12 @@ export async function HtmlBuild({
         name: "get-resource",
         setup(build) {
           build.onEnd(async (result) => {
+            // 重置html
+            $res = load(emptyHtml);
             result.outputFiles?.forEach((file) => {
               appRes[getHttpUrl(file, outdir)] = file;
-              $res = load(emptyHtml);
               $res("body").append(
-                `<script type="module" src="${getHttpUrl(
-                  file,
-                  outdir
-                )}"></script>`
+                getDomTagByExtension(getHttpUrl(file, outdir))
               );
               if (write) {
                 // 更新build导出文件
@@ -131,18 +180,20 @@ export async function HtmlBuild({
                   mkdirSync(path.dirname(file.path), { recursive: true });
                 }
                 fs.writeFile(file.path, file.contents);
-                // 更新html文件
-                fs.writeFile(
-                  path.join(cwd(), outdir, path.basename(htmlPath)),
-                  $res.html()
-                );
               }
             });
+            if (write) {
+              // 更新html文件
+              fs.writeFile(
+                path.join(cwd(), outdir, path.basename(htmlPath)),
+                $res.html()
+              );
+            }
           });
         },
       },
     ],
-    entryPoints: esbuildResources.map((it) => it.url),
+    entryPoints: esbuildResources.map((it) => it.fileUrl),
   });
 
   if (options.serve) {
@@ -195,12 +246,12 @@ export async function HtmlBuild({
       );
     });
   } else if (options.write) {
-    resources.forEach(({ url }) => {
+    resources.forEach(({ url, fileUrl }) => {
       const targetPath = path.join(cwd(), outdir, url);
-      if (!existsSync(targetPath)) {
-        mkdirSync(targetPath, { recursive: true });
+      if (!existsSync(dirname(targetPath))) {
+        mkdirSync(dirname(targetPath), { recursive: true });
       }
-      fs.rename(path.join(cwd(), url), targetPath);
+      fs.copyFile(path.join(cwd(), fileUrl), targetPath);
     });
   }
 }
