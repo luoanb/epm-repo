@@ -151,9 +151,6 @@ export async function HtmlBuild({
 
   const write = options.write && !options.serve;
 
-  console.log("esbuildResources", esbuildResources);
-  console.log("options.plugins", options.plugins);
-
   await buildOnePlatForm({
     ...options,
     metafile: true,

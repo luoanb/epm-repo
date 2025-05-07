@@ -10,6 +10,10 @@
       ".": "./src/index.ts"
     }
   },
+  "typeRoots": [
+    "../../node_modules/@types",
+    "./node_modules/@types"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,6 +22,7 @@
   "license": "ISC",
   "devDependencies": {
     "epm-repo": "^0.0.5",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "esbuild": "^0.25.2"
   }
 }

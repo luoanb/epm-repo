@@ -296,24 +296,28 @@ export class SrcModuleInfo {
    * @returns
    */
   static getBuildConfigByPkgInfo(pkgInfo: Record<string, any>) {
-    // if (!this.isNeedBuild(pkgInfo)) {
-    //   return [];
-    // }
-    const index = {
-      input: {
-        name: "cuurent",
-        key: ".",
-        src: this.getMainSrc(pkgInfo), // 输入路径：例如 './index.ts'
-      },
-      output: {
-        import:
-          pkgInfo.module || path.join(this.getOutputDir(pkgInfo), "index.mjs"),
-        require:
-          pkgInfo.main || path.join(this.getOutputDir(pkgInfo), "index.js"),
-        types:
-          pkgInfo.types || path.join(this.getOutputDir(pkgInfo), "index.d.ts"),
-      },
-    };
+    const isApp = this.isMustBuild(pkgInfo);
+    const mainSrc = isApp ? "index.html" : this.getMainSrc(pkgInfo);
+
+    const index = mainSrc
+      ? {
+          input: {
+            name: "cuurent",
+            key: ".",
+            src: mainSrc, // 输入路径：例如 './index.ts'
+          },
+          output: {
+            import:
+              pkgInfo.module ||
+              path.join(this.getOutputDir(pkgInfo), "index.mjs"),
+            require:
+              pkgInfo.main || path.join(this.getOutputDir(pkgInfo), "index.js"),
+            types:
+              pkgInfo.types ||
+              path.join(this.getOutputDir(pkgInfo), "index.d.ts"),
+          },
+        }
+      : null;
     const ohter = Object.keys(pkgInfo.srcModule.dist || {})
       .filter((key) => key !== ".")
       .map((key) => {
@@ -335,7 +339,7 @@ export class SrcModuleInfo {
           output,
         };
       });
-    return [index].concat(ohter);
+    return index ? [index].concat(ohter) : ohter;
   }
 }
 

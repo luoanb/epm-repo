@@ -8,6 +8,9 @@ devDependencies:
   epm-repo:
     specifier: ^0.0.5
     version: 0.0.5
+  esbuild:
+    specifier: ^0.25.2
+    version: 0.25.2
   typescript:
     specifier: ^5.8.2
     version: 5.8.2

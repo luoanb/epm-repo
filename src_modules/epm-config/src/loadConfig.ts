@@ -20,10 +20,10 @@ export const loadConfig = async (configName = "epm.config.ts") => {
     treeShaking: true,
     metafile: true,
     platform: "node",
-    external: ["/node_modules/*"],
+    // external: ["/node_modules/*"],
     outfile: "./node_modules/.epm_cache/epm.config.js",
   });
-  console.log(res.metafile);
+  // console.log(res.metafile);
   const moduleUrl = pathToFileURL(
     "./node_modules/.epm_cache/epm.config.js"
   ).href;

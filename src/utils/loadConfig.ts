@@ -1,1 +1,1 @@
-export * from "epm-config";
+export { loadConfig } from "epm-config";
