@@ -144,7 +144,7 @@ export const build = async (option: BuildOptions) => {
   }
 
   const config = await loadConfig();
-  console.log(config, "config");
+  // console.log(config, "config");
   const serveOptions = config?.serveOptions;
 
   const allPromise: Promise<any>[] = [];
@@ -249,7 +249,7 @@ export const build = async (option: BuildOptions) => {
     );
   }
 
-  console.log("config", config);
+  // console.log("config", config);
 
   allPromise.push(
     ...htmlEntry?.map((entry) => {

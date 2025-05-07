@@ -20,6 +20,16 @@ export interface HtmlBuildOptions extends Partial<esbuild.BuildOptions> {
   serve?: boolean;
   custom?: boolean;
   serveOptions?: esbuild.ServeOptions;
+  /**
+   * 开发或生产环境服务的公共基础路径
+   * @default '/'
+   */
+  base?: string;
+  /**
+   * 需要esbuild构建的文件的后缀
+   * @default ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"
+   **/
+  esbuildSourceExts?: string[];
 }
 
 // 定义资源选择器类型
@@ -51,8 +61,6 @@ const resourceSelectors: ResourceSelector[] = [
   { selector: "embed[src]", attr: "src", type: "embed" }, // 嵌入内容
   { selector: "object[data]", attr: "data", type: "object" }, // 对象
 ];
-
-const esbuildSourceExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"];
 
 /**
  * 判断是否是静态资源路径
@@ -110,10 +118,16 @@ function getDomTagByExtension(filePath: string): string {
   }
 }
 
-// TODO build写文件& 仅监听模式写文件
+function isEmpty(value: any) {
+  return typeof value === "undefined";
+}
+
+// TODO html多js文件构建时, 会携带原始路径的地址,这时候可能会导致html上拼接的路径不对
 export async function HtmlBuild({
   path: htmlPath,
   outdir = "./dist",
+  base = "/",
+  esbuildSourceExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"],
   ...options
 }: HtmlBuildOptions) {
   const content = await fs.readFile(htmlPath, "utf8"); // TODO 监听文件变化
@@ -127,8 +141,11 @@ export async function HtmlBuild({
       const resource = $(el).attr(attr);
 
       if (!resource) return;
-      if (!isStaticUrl(resource)) return;
-      if (esbuildSourceExts.includes(path.extname(resource))) {
+      if (!isStaticUrl(resource) || !isEmpty($(el).attr("ignore"))) return; // ignore 不处理
+      if (
+        esbuildSourceExts.includes(path.extname(resource)) &&
+        isEmpty($(el).attr("copy")) // 标注copy表示无需esbuild关注
+      ) {
         $(el).remove();
         esbuildResources.push({
           url: path.join(dirname(htmlPath), resource),

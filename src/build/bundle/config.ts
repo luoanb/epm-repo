@@ -3,9 +3,5 @@ export const bundleConfig: BuildOptions = {
   bundle: true,
   platform: "node",
   write: false,
-  external: [
-    "esbuild",
-    "@microsoft/api-extractor",
-    "@craftamap/esbuild-plugin-html",
-  ],
+  external: ["esbuild", "@microsoft/api-extractor"],
 };
