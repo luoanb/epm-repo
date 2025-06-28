@@ -1,21 +1,26 @@
-import { SrcModuleInfo, formatLinuxPath, getRootDirname } from "module-ctrl";
+import { formatLinuxPath, getRootDirname, moduleCtrl } from "module-ctrl";
 import { wirteJsonFile } from "./utils/JsonFile";
 import { promises as fs, existsSync } from "fs";
 import path from "path";
 import { Exception } from "exception";
 
+/**
+ * 创建一个导出文件，并更新 package.json 中的 exports 字段。
+ * @param fileName - 要创建的文件名（不带扩展名）。
+ * @returns Promise<void>
+ */
 export async function createExportFile(fileName: string): Promise<void> {
   const rootDir = getRootDirname();
-  const packageJson = await SrcModuleInfo.readPackageInfo(rootDir);
-  const dist = SrcModuleInfo.isNeedBuild(packageJson);
+  const packageJson = await moduleCtrl.readPackageInfo(rootDir);
+  const dist = moduleCtrl.isNeedBuild(packageJson);
   if (!packageJson) {
     Exception.throw("1000", { contentMsg: rootDir });
   }
 
   // 确保 packageJson.srcModule 存在
   packageJson.srcModule = packageJson.srcModule || {};
-  const srcDir = SrcModuleInfo.getSrcDir(packageJson);
-  const outputDir = SrcModuleInfo.getOutputDir(packageJson);
+  const srcDir = moduleCtrl.getSrcDir(packageJson);
+  const outputDir = moduleCtrl.getOutputDir(packageJson);
 
   // 使用 path 拼接路径
   const filePath = path.join(rootDir, srcDir, `${fileName}.ts`);

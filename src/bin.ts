@@ -3,6 +3,7 @@
 import {
   cpModulesToSrc,
   cpSpecificSrcmodule,
+  moduleCtrl,
   updatePackageInfoForSrcModule,
 } from "module-ctrl";
 import yargs from "yargs/yargs";
@@ -14,6 +15,15 @@ import { build } from "./build";
 import { createSubModuleHandler } from "./createSubModule";
 import { createExportFile } from "./createExportFile";
 import { switchModuleDistStatus } from "./swithModuleDistStatus";
+import { install } from "./install";
+
+// 前置注入中间件，确保模块控制器已初始化
+const definedCommandsHandler = (cmd: (...props: any[]) => Promise<void>) => {
+  return async (...props: any[]) => {
+    await moduleCtrl.init();
+    await cmd(...props);
+  };
+};
 
 yargs(hideBin(process.argv))
   .command({
@@ -26,10 +36,10 @@ yargs(hideBin(process.argv))
         default: "./",
       },
     },
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       await cpModulesToSrc(argv.projectPath);
       await updatePackageInfoForSrcModule(argv.projectPath);
-    },
+    }),
   })
   .command({
     command: "cp", // 不具名参数
@@ -51,13 +61,13 @@ yargs(hideBin(process.argv))
         default: false,
       },
     },
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       if (argv.all) {
         await cpModulesToSrc(argv.projectPath);
       } else {
         await cpSpecificSrcmodule(argv.projectPath, argv.moduleName);
       }
-    },
+    }),
   })
   .command({
     command: "updateInfo", // 不具名参数
@@ -69,9 +79,9 @@ yargs(hideBin(process.argv))
         default: "./",
       },
     },
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       await updatePackageInfoForSrcModule(argv.projectPath);
-    },
+    }),
   })
   .command({
     command: "updateTsconfig", // 不具名参数
@@ -83,20 +93,20 @@ yargs(hideBin(process.argv))
         default: "./",
       },
     },
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       await setTsconfigSrcmodule(argv.projectPath);
-    },
+    }),
   })
   .command({
     command: "shell", // 执行shell指令
     describe: "执行终端指令",
     builder: {},
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       const v: string[] = argv._;
       const index = v.findIndex((i: string) => i == "shell");
       const params = v.slice(index + 1);
       Shell.exec(params.join(" "));
-    },
+    }),
   })
   .command({
     command: "build", // 打包
@@ -131,47 +141,55 @@ yargs(hideBin(process.argv))
         default: false,
       },
     },
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       // @ts-expect-error
       await build(argv);
-    },
+    }),
   })
   .command({
     command: "createSubModule <projectName>", // 创建子模块
     describe: "创建子模块",
     aliases: ["csm"],
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       if (!argv.projectName) {
         console.error("项目名称不能为空！");
         return;
       }
       await createSubModuleHandler(argv);
-    },
+    }),
   })
   .command({
     command: "createExportFile <filetName>", // 创建子模块
     describe: "创建可导出文件",
     aliases: ["cf"],
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       if (!argv.filetName) {
         console.error("文件名称不能为空！");
         return;
       }
       await createExportFile(argv.filetName);
-    },
+    }),
   })
   .command({
     command: "swithBuildMode <projectName>", // 切换指定模块的打包模式
     describe:
       "切换指定模块的打包模式(源码模式-> 构建模式，构建模式-> 源码模式)",
     aliases: ["sbm"],
-    async handler(argv: Record<string, any>) {
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
       if (!argv.projectName) {
         console.error("项目名称不能为空！");
         return;
       }
       await switchModuleDistStatus(argv.projectName);
-    },
+    }),
+  })
+  .command({
+    command: "install",
+    describe: "下载所有包依赖",
+    aliases: ["i"],
+    handler: definedCommandsHandler(async (argv: Record<string, any>) => {
+      await install();
+    }),
   })
   .fail((msg, err) => {
     if (err) {

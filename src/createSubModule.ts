@@ -3,7 +3,7 @@ import path from "path";
 import inquirer from "inquirer";
 import { Exception } from "exception";
 import { execSync } from "child_process";
-import { getFileDirPath, getRootDirname, SrcModuleInfo } from "module-ctrl";
+import { getFileDirPath, getRootDirname, moduleCtrl } from "module-ctrl";
 
 interface CliOptions {
   projectName?: string;
@@ -34,12 +34,11 @@ export async function createSubModuleHandler(
   argv: CliOptions
 ): Promise<undefined> {
   console.log("Welcome to create-submodule! 🚀");
-
   // 获取根目录路径
   const rootDir = getRootDirname();
 
   // 读取根目录的 package.json 数据
-  const rootPackageJson = await SrcModuleInfo.readPackageInfo(rootDir);
+  const rootPackageJson = await moduleCtrl.readPackageInfo(rootDir);
 
   // 检查是否为根目录
   if (!(rootPackageJson || {}).srcModule?.isRoot) {

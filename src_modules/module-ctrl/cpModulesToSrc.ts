@@ -1,9 +1,9 @@
-import { readdir, stat, readFile } from "fs/promises";
+import { readdir } from "fs/promises";
 import fs, { statSync } from "fs";
 import path from "path";
 import fse from "fs-extra/esm";
 import { Exception } from "exception";
-import { SrcModuleInfo } from "./SrcModuleInfo";
+import { moduleCtrl } from "./ModuleCtrl";
 
 /**
  * 将项目内的所有src_module从node_modules复制到src_modules
@@ -16,10 +16,10 @@ export const cpModulesToSrc = async (projectPath: string) => {
   // todo 还有@rsbuild/code 类似的包无法被正常识别复制
   const cpExecs = files.map(async (p) => {
     const packPath = path.join(sourcePath, p);
-    if (await SrcModuleInfo.isSrcModule(packPath)) {
+    if (await moduleCtrl.isSrcModule(packPath)) {
       const targetPath = path.join(
         projectPath,
-        "src_modules",
+        moduleCtrl.SRC_MODULES,
         getLastFolderName(packPath)
       );
       // 已存在的跳过
@@ -55,10 +55,10 @@ export const cpSpecificSrcmodule = async (
 ) => {
   const sourcePath = path.join(projectPath, "node_modules", moduleName);
   try {
-    if (await SrcModuleInfo.isSrcModule(sourcePath)) {
+    if (await moduleCtrl.isSrcModule(sourcePath)) {
       const targetPath = path.join(
         projectPath,
-        "src_modules",
+        moduleCtrl.SRC_MODULES,
         getLastFolderName(sourcePath)
       );
       // 已存在的跳过

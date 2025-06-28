@@ -7,7 +7,7 @@ import { dtsConfig } from "./config";
 import { Shell } from "../../utils/Shell";
 import path from "path";
 import { cwd } from "process";
-import { SrcModuleInfo, windowsPathToLinuxPath } from "module-ctrl";
+import { moduleCtrl } from "module-ctrl";
 export interface DtsOptions extends IConfigFile {
   /** 根路径 默认cwd() */
   root?: string;
@@ -31,7 +31,7 @@ export const dts = async ({
   overrideTsconfig,
   ...options
 }: DtsOptions) => {
-  const packageJson = await SrcModuleInfo.readPackageInfo(projectPath);
+  const packageJson = await moduleCtrl.readPackageInfo(projectPath);
   if (!packageJson) {
     return;
   }

@@ -1,4 +1,4 @@
-import { SrcModuleInfo, windowsPathToLinuxPath, ModuleItem } from "module-ctrl";
+import { moduleCtrl, formatLinuxPath, ModuleItemV1 } from "module-ctrl";
 import { buildOnePlatForm } from "./bundle";
 import { dts } from "./dts";
 import path from "path";
@@ -18,11 +18,11 @@ export interface BuildOptions {
 }
 
 function getName(...paths: string[]) {
-  return windowsPathToLinuxPath(path.join(...paths), true);
+  return formatLinuxPath(path.join(...paths), true);
 }
 
 export const getOutName = (
-  it: ModuleItem,
+  it: ModuleItemV1,
   entryInfo: any,
   type: "cjs" | "mjs" | "ts" = "cjs"
 ) => {
@@ -38,15 +38,14 @@ export const getOutName = (
     return type == "ts" ? dtsName : libName;
   }
   return getName(
-    SrcModuleInfo.SRC_MODULES,
+    moduleCtrl.SRC_MODULES,
     it.name,
     type == "ts" ? dtsName : libName
   );
 };
 
 export const build = async (option: BuildOptions) => {
-  const { moduleMap: moduleList } =
-    await SrcModuleInfo.getCurrentSrcModulesInfo("./");
+  const { moduleMap: moduleList } = await moduleCtrl.srcModulesInfo;
   const webEntry: any[] = [];
   const webEntryMjs: any[] = [];
   const nodeEntry: any[] = [];
@@ -54,73 +53,74 @@ export const build = async (option: BuildOptions) => {
   const dtsEntry: any[] = [];
   const htmlEntry: any[] = [];
 
-  function fillEntryByModuleItem(it: ModuleItem) {
-    SrcModuleInfo.getBuildConfigByPkgInfo(it.packageInfo).forEach(
-      (entryInfo) => {
-        // 所有的dts都需要打包（isNeedBuild）
-        // 非lib不打包dts（buildType）
-        if (it.packageInfo.srcModule?.buildType != "web-app") {
-          dtsEntry.push({
-            ...it,
-            esEntry: {
-              in: windowsPathToLinuxPath(
-                path.join(it.src, entryInfo.input.src),
-                true
-              ),
-              out: getOutName(it, entryInfo, "ts"),
-            },
-          });
-        }
-        // 源码库无需打包
-        if (!SrcModuleInfo.isNeedBuild(it.packageInfo)) {
-          return;
-        }
-        const inPath = windowsPathToLinuxPath(
-          path.join(it.src, entryInfo.input.src || ""),
-          true
-        );
-
-        if (it.packageInfo.platform == "web") {
-          if (it.packageInfo.srcModule?.buildType == "web-app") {
-            const servedir = windowsPathToLinuxPath(
-              path.join(it.src, SrcModuleInfo.getOutputDir(it.packageInfo)),
+  function fillEntryByModuleItem(it: ModuleItemV1) {
+    moduleCtrl.getBuildConfigByPkgInfo(it.packageInfo).forEach((entryInfo) => {
+      // 所有的dts都需要打包（isNeedBuild）
+      // 非lib不打包dts（buildType）
+      if (it.packageInfo.srcModule?.buildType != "web-app") {
+        dtsEntry.push({
+          ...it,
+          esEntry: {
+            in: formatLinuxPath(
+              path.join(it.url.fileUrl, entryInfo.input.src),
               true
-            );
-            htmlEntry.push({
-              inputHtmlPath: windowsPathToLinuxPath(
-                path.join(it.src, "index.html"),
-                true
-              ),
-              outHtmlPath: "index.html", // 直接输出到{servedir}/index.html
-              servedir,
-            });
-          } else {
-            webEntry.push({
-              in: inPath,
-              out: getOutName(it, entryInfo, "cjs"),
-            });
-            webEntryMjs.push({
-              in: windowsPathToLinuxPath(
-                path.join(it.src, entryInfo.input.src),
-                true
-              ),
-              out: getOutName(it, entryInfo, "mjs"),
-            });
-          }
+            ),
+            out: getOutName(it, entryInfo, "ts"),
+          },
+        });
+      }
+      // 源码库无需打包
+      if (!moduleCtrl.isNeedBuild(it.packageInfo)) {
+        return;
+      }
+      const inPath = formatLinuxPath(
+        path.join(it.url.fileUrl, entryInfo.input.src || ""),
+        true
+      );
+
+      if (it.packageInfo.platform == "web") {
+        if (it.packageInfo.srcModule?.buildType == "web-app") {
+          const servedir = formatLinuxPath(
+            path.join(it.url.fileUrl, moduleCtrl.getOutputDir(it.packageInfo)),
+            true
+          );
+          htmlEntry.push({
+            inputHtmlPath: formatLinuxPath(
+              path.join(it.url.fileUrl, "index.html"),
+              true
+            ),
+            outHtmlPath: "index.html", // 直接输出到{servedir}/index.html
+            servedir,
+          });
         } else {
-          nodeEntry.push({
+          webEntry.push({
             in: inPath,
             out: getOutName(it, entryInfo, "cjs"),
           });
-          nodeEntryMjs.push({
-            in: inPath,
+          webEntryMjs.push({
+            in: formatLinuxPath(
+              path.join(it.url.fileUrl, entryInfo.input.src),
+              true
+            ),
             out: getOutName(it, entryInfo, "mjs"),
           });
         }
+      } else {
+        nodeEntry.push({
+          in: inPath,
+          out: getOutName(it, entryInfo, "cjs"),
+        });
+        nodeEntryMjs.push({
+          in: inPath,
+          out: getOutName(it, entryInfo, "mjs"),
+        });
       }
-    );
+    });
   }
 
+  if (!moduleList) {
+    return Exception.throw("1000", { contentMsg: "未获取到模块列表" });
+  }
   for (const key of Object.keys(moduleList)) {
     const it = moduleList[key];
     // 手动指定具体打包项目

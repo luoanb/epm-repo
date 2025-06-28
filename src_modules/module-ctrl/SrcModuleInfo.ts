@@ -3,21 +3,14 @@ import path from "path";
 import {
   depKeys,
   formatLinuxPath,
-  windowsPathToLinuxPath,
+  formatLinuxPath,
 } from "./updatePackageInfoForSrcModule";
 import { Cache_Createor } from "./Cache_Createor";
 
 import fs, { existsSync, statSync } from "fs";
 import { Exception } from "exception";
+import { ModuleExport } from "./ModuleCtrl";
 type PackageInfo = Record<string, any>;
-
-export interface ModuleExport {
-  import?: string;
-  require?: string;
-  types?: string;
-  default?: string;
-  node?: string;
-}
 
 export type ModuleItem = {
   /** 模块名称 */
@@ -40,6 +33,7 @@ export type ModuleDeps = Record<string, Array<string>>;
 export type ModuleMap = Record<string, ModuleItem>;
 
 /**
+ * @deprecated 已经废弃，请使用 moduleCtrl
  * SrcModule信息查询
  * ```json
 // SrcModule规范
@@ -108,7 +102,7 @@ export class SrcModuleInfo {
   static formatPath_Creator = (projectPath: string) => {
     return {
       toWrite: (src: string) =>
-        windowsPathToLinuxPath(path.relative(projectPath, src), true),
+        formatLinuxPath(path.relative(projectPath, src), true),
       toSystem: (relativeSrc: string) => path.join(projectPath, relativeSrc),
     };
   };

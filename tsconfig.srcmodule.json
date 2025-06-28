@@ -1,36 +1,16 @@
 {
   "compilerOptions": {
     "paths": {
-      "create-epm": [
-        "./src_modules/create-epm/index.ts"
-      ],
-      "template": [
-        "./src_modules/epm-config/src/index.ts"
-      ],
-      "exception": [
-        "./src_modules/exception/index.ts"
-      ],
-      "html-build": [
-        "./src_modules/html-build/src/index.ts"
-      ],
-      "module-ctrl": [
-        "./src_modules/module-ctrl/index.ts"
-      ],
-      "publish": [
-        "./src_modules/publish/index.ts"
-      ],
-      "publish/test": [
-        "./src_modules/publish/test.ts"
-      ],
-      "vcs": [
-        "./src_modules/vcs/index.ts"
-      ],
-      "epm-repo": [
-        "./src/index.ts"
-      ],
-      "epm-repo/bin": [
-        "./src/bin.ts"
-      ]
+      "create-epm": ["./src_modules/create-epm/index.ts"],
+      "epm-config": ["./src_modules/epm-config/src/index.ts"],
+      "exception": ["./src_modules/exception/index.ts"],
+      "module-ctrl": ["./src_modules/module-ctrl/index.ts"],
+      "publish": ["./src_modules/publish/index.ts"],
+      "publish/test": ["./src_modules/publish/test.ts"],
+      "vcs": ["./src_modules/vcs/index.ts"],
+      "epm-repo": ["./src/index.ts"],
+      "epm-repo/bin": ["./src/bin.ts"],
+      "epm-repo/defineConfig": ["./src/defineConfig.ts"]
     }
   }
 }

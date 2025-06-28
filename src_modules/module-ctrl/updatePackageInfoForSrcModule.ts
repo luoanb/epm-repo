@@ -1,7 +1,7 @@
 import { readdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { Exception } from "exception";
-import { SrcModuleInfo } from "./SrcModuleInfo";
+import { moduleCtrl } from "./ModuleCtrl";
 
 export const depKeys = ["devDependencies", "dependencies", "peerDependencies"];
 // const defaultDependencies = "dependencies"
@@ -40,7 +40,7 @@ export const updatePackageInfoForSrcModule = async (projectPath: string) => {
 
     for (const f of files) {
       const mf = path.join(srcPath, f);
-      const info = await SrcModuleInfo.readPackageInfo(mf);
+      const info = await moduleCtrl.readPackageInfo(mf);
       if (info) {
         packageDatas.push({
           url: mf,
@@ -65,7 +65,7 @@ export const updatePackageInfoForSrcModule = async (projectPath: string) => {
         newP = updateDependenciesInPackageData(
           pInfo.data,
           sm.name,
-          windowsPathToLinuxPath(path.relative(pInfo.url, sm.url), true)
+          formatLinuxPath(path.relative(pInfo.url, sm.url), true)
         );
       }
       await writeFile(
@@ -113,10 +113,7 @@ const updateDependenciesInPackageData = (
  * @param strongRelative 强制附加 "./"|"../"
  * @returns
  */
-export function windowsPathToLinuxPath(
-  windowsPath: string,
-  strongRelative = false
-) {
+export function formatLinuxPath(windowsPath: string, strongRelative = false) {
   const isAbsolute = path.isAbsolute(windowsPath);
   // 检查是否是绝对路径（以驱动器字母开头）
   const driveLetterPattern = /^[a-zA-Z]:/;
@@ -139,5 +136,3 @@ export function windowsPathToLinuxPath(
   }
   return `./${linuxPath}`;
 }
-
-export { windowsPathToLinuxPath as formatLinuxPath };

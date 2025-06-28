@@ -1,11 +1,5 @@
-import {
-  ModuleExport,
-  SrcModuleInfo,
-  formatLinuxPath,
-  getRootDirname,
-} from "module-ctrl";
+import { moduleCtrl, getRootDirname } from "module-ctrl";
 import { wirteJsonFile } from "./utils/JsonFile";
-import { promises as fs, existsSync } from "fs";
 import path from "path";
 import { Exception } from "exception";
 
@@ -14,26 +8,26 @@ const switchByProjectPath = async (
   packageJson: any = null
 ) => {
   if (!packageJson) {
-    packageJson = await SrcModuleInfo.readPackageInfo(projectPath);
+    packageJson = await moduleCtrl.readPackageInfo(projectPath);
   }
   if (!packageJson) {
     Exception.throw("1001", { contentMsg: projectPath });
   }
 
-  const dist = SrcModuleInfo.isNeedBuild(packageJson);
+  const dist = moduleCtrl.isNeedBuild(packageJson);
   // 源码模式-> 构建模式 (不能修改源码位置)
   if (!dist) {
-    // const mainSrc = SrcModuleInfo.getMainSrc(packageJson);
+    // const mainSrc = moduleCtrl.getMainSrc(packageJson);
     packageJson.srcModule = packageJson.srcModule || {};
     // 指定打包入口
-    packageJson.srcModule.dist = SrcModuleInfo.getExportsPath(packageJson);
+    packageJson.srcModule.dist = moduleCtrl.getExportsPath(packageJson);
     // 更新导出路径
-    packageJson.exports = SrcModuleInfo.getDistExports(packageJson);
+    packageJson.exports = moduleCtrl.getDistExports(packageJson);
     // TODO:　目前只支持 lib 模式
     packageJson.srcModule.buildType = "lib";
   } else {
     // 构建模式-> 源码模式 (不能修改源码位置)　App必须打包
-    if (SrcModuleInfo.isMustBuild(packageJson)) {
+    if (moduleCtrl.isMustBuild(packageJson)) {
       return packageJson;
     }
     packageJson.exports = packageJson.srcModule.dist;
@@ -46,22 +40,25 @@ export async function switchModuleDistStatus(
   packageName: string
 ): Promise<void> {
   const rootDir = getRootDirname();
-  const { moduleMap } = await SrcModuleInfo.getCurrentSrcModulesInfo(rootDir);
+  const { moduleMap } = await moduleCtrl.srcModulesInfo;
+  if (!moduleMap) {
+    Exception.throw("1000", { contentMsg: rootDir });
+  }
   const packageInfo = moduleMap[packageName];
   if (!packageInfo) {
     Exception.throw("1001", { contentMsg: packageName });
   }
 
   const packageJson = await switchByProjectPath(
-    packageInfo.src,
+    packageInfo.url.fileUrl,
     packageInfo.packageInfo
   );
 
   // 保存更新后的 package.json
   await wirteJsonFile(
-    path.join(rootDir, packageInfo.src, "package.json"),
+    path.join(rootDir, packageInfo.url.fileUrl, "package.json"),
     packageJson,
     2
   );
-  console.log(`操作成功)`);
+  console.log(`操作成功`);
 }
