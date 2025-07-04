@@ -50,13 +50,13 @@ export async function switchModuleDistStatus(
   }
 
   const packageJson = await switchByProjectPath(
-    packageInfo.url.fileUrl,
+    packageInfo.url.url,
     packageInfo.packageInfo
   );
 
   // 保存更新后的 package.json
   await wirteJsonFile(
-    path.join(rootDir, packageInfo.url.fileUrl, "package.json"),
+    path.join(rootDir, packageInfo.url.url, "package.json"),
     packageJson,
     2
   );

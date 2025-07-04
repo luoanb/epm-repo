@@ -62,7 +62,7 @@ export const build = async (option: BuildOptions) => {
           ...it,
           esEntry: {
             in: formatLinuxPath(
-              path.join(it.url.fileUrl, entryInfo.input.src),
+              path.join(it.url.url, entryInfo.input.src),
               true
             ),
             out: getOutName(it, entryInfo, "ts"),
@@ -74,19 +74,19 @@ export const build = async (option: BuildOptions) => {
         return;
       }
       const inPath = formatLinuxPath(
-        path.join(it.url.fileUrl, entryInfo.input.src || ""),
+        path.join(it.url.url, entryInfo.input.src || ""),
         true
       );
 
       if (it.packageInfo.platform == "web") {
         if (it.packageInfo.srcModule?.buildType == "web-app") {
           const servedir = formatLinuxPath(
-            path.join(it.url.fileUrl, moduleCtrl.getOutputDir(it.packageInfo)),
+            path.join(it.url.url, moduleCtrl.getOutputDir(it.packageInfo)),
             true
           );
           htmlEntry.push({
             inputHtmlPath: formatLinuxPath(
-              path.join(it.url.fileUrl, "index.html"),
+              path.join(it.url.url, "index.html"),
               true
             ),
             outHtmlPath: "index.html", // 直接输出到{servedir}/index.html
@@ -99,7 +99,7 @@ export const build = async (option: BuildOptions) => {
           });
           webEntryMjs.push({
             in: formatLinuxPath(
-              path.join(it.url.fileUrl, entryInfo.input.src),
+              path.join(it.url.url, entryInfo.input.src),
               true
             ),
             out: getOutName(it, entryInfo, "mjs"),

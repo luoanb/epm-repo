@@ -46,10 +46,7 @@ export const dts = async ({
     const it = moduleMap[key];
     moduleCtrl.getBuildConfigByPkgInfo(it.packageInfo).forEach((entryInfo) => {
       dtsInfoList.push({
-        in: formatLinuxPath(
-          path.join(it.url.fileUrl, entryInfo.input.src),
-          true
-        ),
+        in: formatLinuxPath(path.join(it.url.url, entryInfo.input.src), true),
         out: getOutName(it, entryInfo, "ts"),
         it,
       });
@@ -111,7 +108,7 @@ export const dts = async ({
   console.time("mockProject");
   for (const key of Object.keys(moduleMap)) {
     const it = moduleMap[key];
-    await mockProject(it.url.fileUrl);
+    await mockProject(it.url.url);
   }
   console.timeEnd("mockProject");
 
@@ -119,7 +116,7 @@ export const dts = async ({
     dtsInfoList.map(async (info) => {
       const projectRelativePath = path.join(
         dtsSwapFolder,
-        getProjectRelativePath(info.it.url.fileUrl)
+        getProjectRelativePath(info.it.url.url)
       );
 
       // 生成的dts文件路径(未聚合)

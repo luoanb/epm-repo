@@ -17,7 +17,7 @@ export async function getSrcmoduleTsconfigPaths(
             type == "src" ? entryInfo.input.src : entryInfo.output.types;
           const basename = type == "dts" ? path.basename(out) : "";
           paths[`${formatLinuxPath(path.join(it.name, entryInfo.input.key))}`] =
-            [formatLinuxPath(path.join(it.url.fileUrl, out, basename), true)];
+            [formatLinuxPath(path.join(it.url.url, out, basename), true)];
         });
     }
   }

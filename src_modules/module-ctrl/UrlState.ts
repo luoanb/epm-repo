@@ -1,9 +1,13 @@
 import path from "node:path";
 
 export interface UrlState {
+  /** 以当前的root为参照，创建一个UrlState对象 */
   create: (url: string) => UrlState;
+  /** 项目路径 */
   root: string;
+  /** 文件系统路径(如果是相对路径，则是基于cwd()) */
   fileUrl: string;
+  /** 基于root的相对路径 */
   url: string;
   toJSON: () => {
     root: string;
