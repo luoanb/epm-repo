@@ -7,10 +7,17 @@ export const install = async () => {
     moduleCtrl.srcModulesInfo
   );
 
-  Object.keys(moduleCtrl.srcModulesInfo?.moduleMap || {}).forEach((key) => {
-    const m = moduleCtrl.srcModulesInfo?.moduleMap?.[key];
-    if (m) {
-      Shell.exec(`cd ${m.url.fileUrl} && pnpm install`);
+  const cmds = Object.keys(moduleCtrl.srcModulesInfo?.moduleMap || {}).map(
+    (key) => {
+      return async () => {
+        const m = moduleCtrl.srcModulesInfo?.moduleMap?.[key];
+        if (m) {
+          await Shell.exec(`cd ${m.url.fileUrl} && pnpm install`, true);
+        }
+      };
     }
-  });
+  );
+  for await (const cmd of cmds) {
+    await cmd();
+  }
 };

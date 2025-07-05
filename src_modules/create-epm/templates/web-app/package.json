@@ -20,7 +20,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "epm-repo": "^0.0.13",
     "typescript": "^5.8.2"
   }
 }

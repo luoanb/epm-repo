@@ -50,10 +50,27 @@ Es Module Publish Cli
 - js
 - css/scss/sass
 
-# 指令
+# 使用说明
 
+```bash
+# 全局安装(都需要安装噢)
+pnpm install -g epm-repo
 ```
 
+```bash
+# 新建项目
+pnpm create epm
+# 下载依赖
+epm install
+# 构建
+epm build
+# 创建子模块
+epm csm <projectName>
+```
+
+## API
+
+```
 Commands:
 bin.cjs init 初始化：解析源模块并更新依赖关系
 bin.cjs cp 复制源码库到 src_modules
@@ -82,8 +99,8 @@ bin.cjs createExportFile <filetName> 创建可导出文件 [aliases: cf]
 | 文件格式 | 完成情况 |
 | -------- | -------- |
 | TS       | ✓        |
-| TSX      | x        |
-| CSS      | x        |
+| TSX      | ✓        |
+| CSS      | ✓        |
 | SVG      | x        |
 | HTML     | x        |
 | VUE      | x        |

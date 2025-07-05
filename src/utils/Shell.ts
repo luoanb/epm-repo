@@ -1,4 +1,4 @@
-import { exec, execSync } from "child_process";
+import { exec, execSync, spawn } from "child_process";
 import iconv from "iconv-lite";
 import chardet from "chardet";
 
@@ -49,37 +49,69 @@ export class Shell {
   /**
    * 执行指令
    * @param command
+   * @param interactive 是否交互式执行，默认false
    */
-  static exec(command: string) {
-    return new Promise<ShellExecRes>((res) => {
-      const child = exec(command, { encoding: "buffer" });
-      child.stdout?.on("data", (data) => {
-        // 检测编码
-        const encoding = chardet.detect(data) || "utf-8"; // 默认使用 utf-8
-        const out = iconv.decode(data, encoding);
-        console.log(`${command.substring(0, 10)}: ${out}`);
-      });
-      // 实时输出标准错误
-      child.stderr?.on("data", (data) => {
-        const encoding = chardet.detect(data) || "utf-8";
-        const out = iconv.decode(data, encoding);
-        console.error(`${command.substring(0, 10)}: ${out}`);
-      });
-      child.on("error", (err) => {
-        res({
-          code: 3,
-          err,
+  static exec(command: string, interactive = false) {
+    if (interactive) {
+      return new Promise<ShellExecRes>((res) => {
+        console.log("------------------------------");
+        console.log(`Executing command: ${command}`);
+        // 以shell模式交互式执行，继承stdio
+        const child = spawn(command, {
+          shell: true,
+          stdio: "inherit",
+        });
+        child.on("error", (err) => {
+          res({ code: 3, err });
+        });
+        child.on("close", (code, signal) => {
+          if (code === 0) {
+            res({ code: 0 });
+          } else if (code === null) {
+            res({ code: 2, data: { signal } });
+          } else {
+            res({ code: 1, data: { code } });
+          }
         });
       });
-      child.on("close", (code, signal) => {
-        if (code === 0) {
-          res({ code: 0 });
-        } else if (code === null) {
-          res({ code: 2, data: { signal } });
-        } else {
-          res({ code: 1, data: { code } });
-        }
+    } else {
+      return new Promise<ShellExecRes>((res) => {
+        console.log(`Executing command: ${command}`);
+
+        const child = exec(command, { encoding: "buffer" });
+        child.stdout?.on("data", (data) => {
+          // 检测编码
+          const encoding = chardet.detect(data) || "utf-8"; // 默认使用 utf-8
+          const out = iconv.decode(data, encoding);
+          console.log(`${truncateString(command, 10)}: ${out}`);
+        });
+        // 实时输出标准错误
+        child.stderr?.on("data", (data) => {
+          const encoding = chardet.detect(data) || "utf-8";
+          const out = iconv.decode(data, encoding);
+          console.error(`${truncateString(command, 10)}: ${out}`);
+        });
+        child.on("error", (err) => {
+          res({ code: 3, err });
+        });
+        child.on("close", (code, signal) => {
+          if (code === 0) {
+            res({ code: 0 });
+          } else if (code === null) {
+            res({ code: 2, data: { signal } });
+          } else {
+            res({ code: 1, data: { code } });
+          }
+        });
       });
-    });
+    }
   }
+}
+// 缩略字符串 string...string
+export function truncateString(str: string, maxLength: number): string {
+  if (str.length <= maxLength) {
+    return str;
+  }
+  const halfLength = Math.floor(maxLength / 2);
+  return str.slice(0, halfLength) + "..." + str.slice(-halfLength);
 }
