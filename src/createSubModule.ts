@@ -3,7 +3,13 @@ import path from "path";
 import inquirer from "inquirer";
 import { Exception } from "exception";
 import { execSync } from "child_process";
-import { getFileDirPath, getRootDirname, moduleCtrl } from "module-ctrl";
+import {
+  getFileDirPath,
+  getRootDirname,
+  moduleCtrl,
+  readJsonFile,
+  wirteJsonFile,
+} from "module-ctrl";
 
 interface CliOptions {
   projectName?: string;
@@ -122,6 +128,20 @@ export async function createSubModuleHandler(
 
   // 复制模板文件到目标目录
   copyDirectory(selectedTemplateDir, targetDir);
+
+  // Replace placeholders in package.json
+  const packageJsonPath = path.join(targetDir, "package.json");
+  if (fs.existsSync(packageJsonPath)) {
+    const packageJson = await readJsonFile(packageJsonPath);
+    if (packageJson) {
+      packageJson.name = projectName;
+      if (!packageJson.srcModule) {
+        packageJson.srcModule = {};
+      }
+      packageJson.srcModule.isRoot = false;
+      await wirteJsonFile(packageJsonPath, packageJson, 2);
+    }
+  }
 
   console.log("Installing dependencies...");
   try {

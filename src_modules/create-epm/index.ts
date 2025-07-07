@@ -85,6 +85,11 @@ async function main() {
     const packageJson = await readJsonFile(packageJsonPath);
     if (packageJson) {
       packageJson.name = options.projectName;
+      // 标识为根目录
+      if (!packageJson.srcModule) {
+        packageJson.srcModule = {};
+      }
+      packageJson.srcModule.isRoot = true;
       await wirteJsonFile(packageJsonPath, packageJson, 2);
     }
   }
