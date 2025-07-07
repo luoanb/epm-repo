@@ -211,8 +211,8 @@ export function ModuleCtrl(props: ModuleCtrlProps) {
     if (projectPackInfo) {
       getDependencieByPackageInfo(dependencyMap, projectPackInfo, moduleMap);
     }
-    console.log("moduleMap:", moduleMap);
-    console.log("dependencyMap:", dependencyMap);
+    // console.log("moduleMap:", moduleMap);
+    // console.log("dependencyMap:", dependencyMap);
 
     return { moduleMap, dependencyMap };
   }

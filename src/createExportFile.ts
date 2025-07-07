@@ -42,9 +42,9 @@ export async function createExportFile(fileName: string): Promise<void> {
       true
     );
     packageJson.exports[rname] = {
+      types: relativePath.replace(".js", ".d.ts"),
       import: relativePath,
       require: relativePath.replace(".js", ".cjs"),
-      types: relativePath.replace(".js", ".d.ts"),
     };
   } else {
     packageJson.exports[rname] = relativePath;
